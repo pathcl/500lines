@@ -3,11 +3,12 @@ author: Yoav Rubin
 
 _Yoav Rubin is a Senior Software Engineer at Microsoft, and prior to that was a Research Staff Member and a Master Inventor at IBM Research. He works now in the domain of data security in the cloud, and in the past his work focused on developing cloud or web based development environments. Yoav holds an M.Sc. in Medical Research in the field of Neuroscience and B.Sc in Information Systems Engineering. He goes by [\@yoavrubin](https://twitter.com/yoavrubin) on Twitter, and occasionally blogs at [http://yoavrubin.blogspot.com](http://yoavrubin.blogspot.com)._
 
+
+## Introduction 
+
 Software development is often viewed as a rigorous process, where the inputs are requirements and the output is the working product. However, software developers are people, with their own perspectives and biases which color the outcome of their work. 
 
 In this chapter, we will explore how a change in a common perspective affects the design and implementation of a well-studied type of software: a database.
-
-## Introduction 
 
 Database systems are designed to store and query data. This is something that all information workers do; however, the systems themselves were designed by computer scientists. As a result, modern database systems are highly influenced by computer scientists’ definition of what data is, and what can be done with it. 
 
@@ -720,7 +721,7 @@ Our data model is based on accumulation of facts (i.e., datoms) over time. For t
 
 ### Query Language
 
-Let's look at an example query in our proposed language. This query asks: "What are the names and birthday of entities who like pizza, speak English, and who have a birthday this month?"
+Let's look at an example query in our proposed language. This query asks: "What are the names and birthdays of entities who like pizza, speak English, and who have a birthday this month?"
 ```clojure
 {  :find [?nm ?bd ]
    :where [
@@ -1079,8 +1080,8 @@ To better explain this process we'll demonstrate it using our exemplary query, a
 		July 1, 1867
 	</td>
 </tr>
-</table>
-: \label{500l.functionaldb.exampleentities}
+</table> 
+: \label{500l.functionaldb.exampleentities} Example entities
 </markdown>
 <latex>
 \begin{table}
@@ -1166,7 +1167,7 @@ Assuming the query was executed on July 4th, the results of executing it on the 
 <td>[:birthday "July 1, 1867" {3}]</td><td>["?e" nil "?bd"]</td>
 </tr>
 </table>
-: \label{500l.functionaldb.queryresults}
+: \label{500l.functionaldb.queryresults} Query results
 </markdown>
 <latex>
 \begin{table}
@@ -1235,7 +1236,7 @@ Finally, we remove all of the result clauses that are "empty" (i.e., their last 
 <td>[:speak "English" #{1}]</td><td>["?e" nil nil]</td>
 </tr>
 </table>
-: \label{500l.functionaldb.filteredqueryresults}
+: \label{500l.functionaldb.filteredqueryresults} Filtered query results
 </markdown>
 <latex>
 \begin{table}
@@ -1280,12 +1281,12 @@ The twist to the index structure is that now we hold a binding pair of the entit
 
 At the end of phase 3 of our example execution, we have the following structure at hand:
 ```clojure
- {[1 "?e"] {
-		[:likes nil]    ["Pizza" nil]
-        [:name nil]     ["USA" "?nm"]
-        [:speaks nil]   ["English" nil] 
-		[:birthday nil] ["July 4, 1776" "?bd"]} 
-	}}
+{[1 "?e"]{ 
+	{[:likes nil]    ["Pizza" nil]}
+	{[:name nil]     ["USA" "?nm"]}
+	{[:speaks nil]   ["English" nil]} 
+	{[:birthday nil] ["July 4, 1776" "?bd"]} 
+}}
 ```
 
 #### Phase 4: Unify and Report
