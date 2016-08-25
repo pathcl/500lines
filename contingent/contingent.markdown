@@ -1,6 +1,6 @@
 title: Contingent: A Fully Dynamic Build System
 author: Brandon Rhodes and Daniel Rocco
-
+<markdown>
 _Brandon Rhodes started using Python in the late 1990s, and for 17 years has
 maintained the PyEphem library for amateur astronomers. He works at
 Dropbox, has taught Python programming courses for corporate clients,
@@ -13,12 +13,12 @@ and that correct code is one of the most transparent forms of thought._
 _Daniel Rocco loves Python, coffee, craft, stout, object and system design,
 bourbon, teaching, trees, and Latin guitar. Thrilled that he gets to write
 Python for a living, he is always on the lookout for opportunities to learn
-from others in the community and to contribute back by sharing knowledge. He is
+from others in the community, and to contribute by sharing knowledge. He is
 a frequent speaker at PyAtl on introductory topics, testing, design, and shiny
 things; he loves seeing the spark of wonder and delight in people's eyes when
 someone shares a novel, surprising, or beautiful idea. Daniel lives in Atlanta
 with a microbiologist and four aspiring rocketeers._
-
+</markdown>
 ## Introduction
 
 Build systems have long been a standard tool
@@ -48,30 +48,30 @@ then it will not only rebuild the `main.o` object file
 but will also rebuild `prog` itself.
 
 Build systems are a common semester project
-posed for undergraduate computer science students -
+assigned to undergraduate computer science students —
 not only because build systems are used in nearly all software projects,
 but because their construction involves fundamental data structures
 and algorithms involving directed graphs
 (which this chapter will later discuss in more detail).
+
 With decades of use and practice behind build systems,
 one might expect them to have become completely general-purpose
 and ready for even the most extravagant demands.
-
 But, in fact, one kind of common interaction between build artifacts —
 the problem of dynamic cross-referencing —
 is handled so poorly by most build systems
 that in this chapter we are inspired
-to not only rehearse the standard solution
-and data structures used classically to solve the `make` problem,
-but to extend that solution dramatically to a far more demanding domain.
+to not only rehearse the classic solution
+and data structures used to solve the `make` problem,
+but to extend that solution dramatically, to a far more demanding domain.
 
 The problem, again, is cross-referencing.
 Where do cross-references tend to emerge?
-In text documents, documentation, and printed books!
+In text documents, documentation, and printed books! \newpage
 
 ## The Problem: Building Document Systems
 
-Systems to rebuild formatted documents from source texts
+Systems to rebuild formatted documents from source 
 always seem to do too much work, or too little.
 
 They do too much work
@@ -123,11 +123,11 @@ and `toctree` command might be:
 This table of contents, as you can see, is a mash-up
 of information from four different files.
 While its basic order and structure come from `index.rst`,
-the actual title of each chapter and section
-is pulled from the three chapter source files themselves.
+the actual titles of each chapter and section
+are pulled from the three chapter source files themselves.
 
 If you later reconsider the tutorial’s chapter title —
-after all, the word “newcomer” sounds so antique,
+after all, the word “newcomer” sounds so quaint,
 as if your users are settlers who have just arrived in pioneer Wyoming —
 then you would edit the first line of `tutorial.rst`
 and write something better:
@@ -144,7 +144,7 @@ and write something better:
 When you are ready to rebuild,
 Sphinx will do exactly the right thing!
 It will rebuild both the tutorial chapter itself,
-and also rebuild the index.
+and the index.
 (Piping the output into `cat` makes Sphinx
 announce each rebuilt file on a separate line,
 instead of using bare carriage returns
@@ -190,7 +190,7 @@ will be exactly the same.
 You can run `diff`
 on the “before” and “after” versions of `index.html`
 to confirm that your small edit
-has had zero effect on the project front page —
+has had no effect on the front page —
 yet Sphinx made you wait while it was rebuilt anyway.
 
 You might not even notice the extra rebuild effort
@@ -209,7 +209,7 @@ But it turns out that Sphinx does something even worse:
 it sometimes does too little,
 leaving you with inconsistent output that could be noticed by users.
 
-To see one of Sphinx’s simplest failure modes,
+To see one of its simplest failures,
 first add a cross reference to the top of your API documentation:
 
 ```
@@ -296,19 +296,19 @@ its solution is of equally long lineage:
 
 If you remove all of the output,
 you are guaranteed a complete rebuild!
-Some projects even alias `rm` `-r` a target named `clean`
+Some projects even alias `rm` `-r` to a target named `clean`
 so that only a quick `make` `clean` is necessary to wipe the slate.
 
 By eliminating every copy of every intermediate or output asset,
 a hefty `rm` `-r` is able to force the build to start over again
 with nothing cached — with no memory of its earlier state
-that could possibly lead to a stale product!
+that could possibly lead to a stale product.
 
 But could we develop a better approach?
 
 What if your build system were a persistent process
 that noticed every chapter title, every section title,
-and every cross referenced phrase
+and every cross-referenced phrase
 as it passed from the source code of one document
 into the text of another?
 Its decisions about whether to rebuild other documents
@@ -320,16 +320,17 @@ instead of leaving the output in an inconsistent state.
 The result would be a system like the old static `make` tool,
 but which learned the dependencies between files as they were built —
 that added and removed dependencies dynamically
-as cross references were added, updated, and then later deleted.
+as cross references were added, updated, and deleted.
 
-In the sections that follow we will construct such a tool in Python,
+In the sections that follow we will construct such a tool,
 named Contingent,
-that guarantees correctness in the presence of dynamic dependencies
+in Python.
+Contingent guarantees correctness in the presence of dynamic dependencies
 while performing the fewest possible rebuild steps.
-While Contingent can be applied to any problem domain,
+While it can be applied to any problem domain,
 we will run it against a small version of the problem outlined above.
 
-## Linking Tasks To Make a Graph
+## Linking Tasks to Make a Graph
 
 Any build system needs a way to link inputs and outputs.
 The three markup texts in our discussion above,
@@ -337,10 +338,10 @@ for example,
 each produce a corresponding HTML output file.
 The most natural way to express these relationships
 is as a collection of boxes and arrows —
-or, in mathematician terminology, *nodes* and *edges*
-to form a *graph* (\aosafigref{500l.contingent.graph}.)
+or, in mathematical terminology, *nodes* and *edges* —
+to form a *graph* (\aosafigref{500l.contingent.graph}).
 
-\aosafigure[240pt]{contingent-images/figure1.png}{Three files generated by parsing three input texts.}{500l.contingent.graph}
+\aosafigure[180pt]{contingent-images/figure1.png}{Three files generated by parsing three input texts.}{500l.contingent.graph}
 
 Each language in which a programmer
 might tackle writing a build system
@@ -359,7 +360,7 @@ that can be used without being imported.
 The **tuple** is a read-only sequence
 used to hold heterogeneous data —
 each slot in a tuple typically means something different.
-Here, a tuple (e.g. holds together a hostname and port number,
+Here, a tuple holds together a hostname and port number,
 and would lose its meaning if the elements were re-ordered:
 
 ```python
@@ -382,8 +383,7 @@ Sets remember only whether a given value has been added,
 not how many times,
 and are therefore the go-to data structure
 for removing duplicates from a data stream.
-For example, the following two sets, once the language has built them,
-will each have three elements:
+For example, the following two sets will each have three elements:
 
 ```python
 {3, 4, 5}
@@ -394,10 +394,10 @@ The **dict** is an associative data structure for storing values
 accessible by a key.
 Dicts let the programmer chose the key
 by which each value is indexed,
-instead of using automatic integer indexing like the tuple and list.
+instead of using automatic integer indexing as the tuple and list do.
 The lookup is backed by a hash table,
 which means that dict key lookup runs at the same speed
-whether the dict has a dozen or a million keys!
+whether the dict has a dozen or a million keys.
 
 ```python
 {'ssh': 22, 'telnet': 23, 'domain': 53, 'http': 80}
@@ -413,7 +413,7 @@ of the underlying tuples, lists, sets, and dicts.
 Given that each of our graph edges needs
 to know at least its origin node and its destination node,
 the simplest possible representation would be a tuple.
-The top edge in Figure 1 might look like:
+The top edge in \aosafigref{500l.contingent.graph} might look like:
 
 ```python
     ('tutorial.rst', 'tutorial.html')
@@ -449,13 +449,14 @@ A build system like Contingent
 needs to understand the relationship between a given node
 and all the nodes connected to it.
 For example, when `api.rst` changes,
-Contingent needs to know which assets
-are affected by that change, if any,
+Contingent needs to know which assets, if any,
+are affected by that change
 in order to minimize the work performed
 while also ensuring a complete build.
 To answer this question —
 “what nodes are downstream from `api.rst`?” —
 we need to examine the *outgoing* edges from `api.rst`.
+
 But building the dependency graph requires that
 Contingent be concerned with a node's *inputs* as well.
 What inputs were used, for example,
@@ -504,7 +505,7 @@ which will also absolve us
 of having to mention the node over and over again
 for every one of the edges in which it is involved.
 
-```
+```python
     incoming = {
         'tutorial.html': {'tutorial.rst'},
         'index.html': {'index.rst'},
@@ -546,11 +547,11 @@ You may have been surprised
 by the absence of classes in the above discussion
 of Python data structures.
 After all, classes are a frequent mechanism for structuring applications
-and a hardly less frequent subject of heated debate
+and a hardly less-frequent subject of heated debate
 among their adherents and detractors.
 Classes were once thought important enough that
 entire educational curricula were designed around them,
-and the majority of popular programming languanges
+and the majority of popular programming languages
 include dedicated syntax for defining and using them.
 
 But it turns out that classes are often orthogonal
@@ -561,8 +562,7 @@ classes simply repeat data structures that we have already seen:
 * A class instance is *implemented* as a dict.
 * A class instance is *used* like a mutable tuple.
 
-The class offers key lookup into its attribute dictionary
-through a prettier syntax,
+The class offers key lookup through a prettier syntax,
 where you get to say `graph.incoming`
 instead of `graph["incoming"]`.
 But, in practice, class instances are almost never used
@@ -573,14 +573,14 @@ with implementation details encapsulated behind
 a consistent and memorable interface.
 
 So instead of putting a hostname and a port number together in a tuple
-and having to remember later which came first and which came second,
+and having to remember which came first and which came second,
 you create an `Address` class
 whose instances each have a `host` and a `port` attribute.
 You can then pass `Address` objects around
 where otherwise you would have had anonymous tuples.
 Code becomes easier to read and easier to write.
 But using a class instance does not really change
-any of the questions we faced above when doing data design:
+any of the questions we faced above when doing data design;
 it just provides a prettier and less anonymous container.
 
 The true value of classes, then,
@@ -594,7 +594,7 @@ the powerful built-in data structures Python offers us
 while minimizing the volume of details we are required to
 keep in our heads at any one time.
 Classes provide the mechanism for resolving this apparent quandary:
-used effectively, a class provides a *facade*
+used effectively, a class provides a facade
 around some small subset of the system's overall design.
 When working within one subset — a `Graph`, for example —
 we can forget the implementation details of other subsets
@@ -646,8 +646,7 @@ The Python language and community explicitly and intentionally emphasize
 using simple, generic data structures to solve problems,
 instead of creating custom classes for every minute detail
 of the problem we want to tackle.
-This is one facet of the notion of “Pythonic” solutions that you may
-have read about.
+This is one facet of the notion of “Pythonic” solutions:
 Pythonic solutions try to
 minimize syntactic overhead
 and leverage Python's powerful built-in tools
@@ -655,7 +654,7 @@ and extensive standard library.
 
 With these considerations in mind,
 let’s return to the `Graph` class,
-examining its design and implmentation to see
+examining its design and implementation to see
 the interplay between data structures and class interfaces.
 When a new `Graph` instance is constructed,
 a pair of dictionaries has already been built
@@ -677,8 +676,8 @@ to signal that an attribute is private.
 This convention is one way the community suggests
 that programmers pass messages and warnings
 through space and time to each other.
-Recognizing the need to signal differences among
-public versus internal object attributes,
+Recognizing the need to signal differences between
+public and internal object attributes,
 the community adopted the single leading underscore
 as a concise and fairly consistent indicator
 to other programmers,
@@ -686,7 +685,7 @@ including our future selves,
 that the attribute is best treated
 as part of the invisible internal machinery of the class.
 
-Why are we using a “defaultdict” instead of a standard dict?
+Why are we using a `defaultdict` instead of a standard dict?
 A common problem when composing dicts
 with other data structures is handling missing keys.
 With a normal dict,
@@ -713,7 +712,7 @@ to handle this specific case, for example when adding a new edge:
 ```
 
 This need is so common that Python includes a special utility,
-the defaultdict, which lets you provide a function
+the `defaultdict`, which lets you provide a function
 that returns a value for absent keys.
 When we ask about an edge that the `Graph` hasn't yet seen,
 we will get back an empty `set` instead of an exception:
@@ -727,7 +726,7 @@ set()
 
 Structuring our implementation this way means that
 each key’s first use can look identical
-to second-and-subsequent-times that a particular key is used:
+to second and subsequent times that a particular key is used:
 
 ```python
 >>> consequences_of['index.rst'].add('index.html')
@@ -774,15 +773,15 @@ without having to learn how to traverse our data structure:
                        for b in self.sorted(self._consequences_of[a])]
 ```
 
-The `Graph.sorted()` method, if you want to examine it later,
+The `Graph.sorted()` method
 makes an attempt to sort the nodes
-in case they have a natural sort order
+in a natural sort order
 (such as alphabetical)
 that can provide a stable output order for the user.
 
 By using this traversal method we can see that,
 following our three “add” method calls earlier,
-`g` now represents the same graph that we saw in Figure 1.
+`g` now represents the same graph that we saw in \aosafigref{500l.contingent.graph}.
 
 ```python
 >>> from pprint import pprint
@@ -807,9 +806,10 @@ the content of `api.rst` changes:
 This `Graph` is telling Contingent that,
 when `api.rst` changes,
 `api.html` is now stale and must be rebuilt.
+
 How about `index.html`?
 
-```
+```python
 >>> g.immediate_consequences_of('index.html')
 []
 ```
@@ -861,8 +861,8 @@ for the various artifacts in our project's documentation.
 
 We now have a way for Contingent
 to keep track of tasks and the relationships between them.
-If we look more closely at Figure 2, however,
-we see that it is actually a little hand wavy and vague:
+If we look more closely at \aosafigref{500l.contingent.graph2}, however,
+we see that it is actually a little hand-wavy and vague:
 *how* is `api.html` produced from `api.rst`?
 How do we know that `index.html` needs the title from the tutorial?
 And how is this dependency resolved?
@@ -894,7 +894,7 @@ simplified input and output document formats.
 Our input documents will consist of a title on the first line,
 with the remainder of the text forming the body.
 Cross references will simply be source file names
-enclosed in back ticks,
+enclosed in backticks,
 which on output are replaced with the title
 from the corresponding document in the output.
 
@@ -930,7 +930,7 @@ Now that we have some source material to work with,
 what functions would a Contingent-based blog builder
 need?
 
-In the simplistic examples above,
+In the simple examples above,
 the HTML output files proceed directly from the source,
 but in a realistic system,
 turning source into markup involves several steps:
@@ -955,7 +955,7 @@ to construct a graph of the relationships between all the tasks.
 ```
 
 A build system for the example given at the beginning of the chapter
-might involve a few basic tasks.
+might involve a few tasks.
 
 Our `read()` task will pretend to read the files from disk.
 Since we really defined the source text in variables,
@@ -988,12 +988,12 @@ and the rest of the content is considered the document's body.
 ```
 
 Because the format is so simple,
-the parser is a little silly, admittedly,
+the parser is a little silly, 
 but it illustrates the interpretive responsibilities
 that parsers are required to carry out.
-Parsing in general is a very interesting subject
+(Parsing in general is a very interesting subject
 and many books have been written
-either partially or completely dedicated to it.
+either partially or completely about it.)
 In a system like Sphinx,
 the parser must understand the many markup tokens,
 directives, and commands defined by the system,
@@ -1088,8 +1088,8 @@ We hope you enjoy it.
 that transitively connects all the tasks
 required to produce the output,
 from reading the input file,
-parsing and transforming the document,
-and rendering the result:
+to parsing and transforming the document,
+and rendering it:
 
 \aosafigure[240pt]{contingent-images/figure3.png}{A task graph.}{500l.contingent.graph3}
 
@@ -1101,12 +1101,12 @@ similar to the stack of live execution frames
 that Python maintains to remember which function to continue running
 when the current one returns.
 
-Every time that a new task is invoked,
+Every time a new task is invoked,
 Contingent can assume that it has been called —
 and that its output will be used —
 by the task currently at the top of the stack.
 Maintaining the stack will require that several extra steps
-surround the invocation of a task \ *T*:
+surround the invocation of a task *T*:
 
 1. Push *T* onto the stack.
 2. Execute *T*, letting it call any other tasks it needs.
@@ -1138,7 +1138,7 @@ Here is what the `task` decorator boilerplate looks like:
 
 This is an entirely typical Python decorator declaration.
 It can then be applied to a function
-by naming it after a `@` character atop the `def`
+by naming it after an `@` character atop the `def`
 that creates the function:
 
 ```python
@@ -1162,10 +1162,8 @@ runs something like this:
         @wraps(function)
         def wrapper(*args):
             task = Task(wrapper, args)
-
             if self.task_stack:
                 self._graph.add_edge(task, self.task_stack[-1])
-
             self._graph.clear_inputs_of(task)
             self._task_stack.append(task)
             try:
@@ -1201,7 +1199,7 @@ This wrapper performs several crucial maintenance steps:
 
 5. Invoke the task
    inside of a `try...finally` block
-   that ensures we correctly remove the finished task from the stack
+   that ensures we correctly remove the finished task from the stack,
    even if it dies by raising an exception.
 
 6. Return the task’s return value,
@@ -1217,7 +1215,7 @@ Since each task gets surrounded by its own copy of the wrapper function,
 the mere invocation and execution of the normal stack of tasks
 will produce a graph of relationships as an invisible side effect.
 That is why we were careful to use the wrapper
-around every one of the processing steps we defined:
+around each processing step that we defined:
 
 ```python
     @task
@@ -1254,11 +1252,10 @@ read('tutorial.txt')
 ```
 
 The consequence of re-reading the `tutorial.txt` file
-and finding its contents have changed
+and finding that its contents have changed
 is that we need to re-execute the `parse()` routine for that document.
 What happens if we render the entire set of documents?
-Will Contingent be able to learn the entire build process
-with its interrelationships?
+Will Contingent be able to learn the entire build process?
 
 ```python
 >>> for filename in 'index.txt', 'tutorial.txt', 'api.txt':
@@ -1287,14 +1284,13 @@ the <a href="tutorial.txt">Beginners Tutorial</a> first.
 
 It worked!
 From the output, we can see that
-our transform substituted the docuent titles
-for the directives in our source docuents,
+our transform substituted the document titles
+for the directives in our source documents,
 indicating that Contingent was able to
 discover the connections between the various tasks
 needed to build our documents.
 
-\aosafigure[240pt]{contingent-images/figure4.png}{The complete set of relationships
-   between our input files and our HTML outputs.}{500l.contingent.graph4}
+\aosafigure[240pt]{contingent-images/figure4.png}{The complete set of relationships between our input files and our HTML outputs.}{500l.contingent.graph4}
 
 By watching one task invoke another
 through the `task` wrapper machinery,
@@ -1309,7 +1305,7 @@ if the inputs to any tasks change.
 
 Once the initial build has run to completion,
 Contingent needs to monitor the input files for changes.
-When the user finishes a new edit and runs “Save,”
+When the user finishes a new edit and runs “Save”,
 both the `read()` method and its consequences need to be invoked.
 
 This will require us to walk the graph in the opposite order
@@ -1324,10 +1320,10 @@ and we need to figure out what consequences lie downstream.
 The process of compiling consequences is a recursive one,
 as each consequence can itself have further tasks that depended on it.
 We could perform this recursion manually
-through repeated calls to the graph
-(note that we are here taking advantage
+through repeated calls to the graph.
+(Note that we are here taking advantage
 of the fact that the Python prompt saves the last value displayed
-under the name `_` for use in the subsequent expression):
+under the name `_` for use in the subsequent expression.)
 
 ```python
 >>> task = Task(read, ('api.txt',))
@@ -1371,15 +1367,15 @@ so that it appears only after the tasks that are its inputs.
 This intelligence is powered by the classic depth-first implementation
 of a topological sort,
 an algorithm which winds up being fairly easy to write in Python
-through a hidden a recursive helper function.
+through a hidden recursive helper function.
 Check out the `graphlib.py` source code for the details.
 
-If upon detecting a change
+If, upon detecting a change,
 we are careful to re-run every task in the recursive consequences,
 then Contingent will be able to avoid rebuilding too little.
 Our second challenge, however,
 was to avoid rebuilding too much.
-Refer again to Figure 4.
+Refer again to \aosafigref{500l.contingent.graph4}.
 We want to avoid rebuilding all three documents
 every time that `tutorial.txt` is changed,
 since most edits will probably not affect its title but only its body.
@@ -1393,9 +1389,9 @@ This optimization will involve a final data structure.
 We will give the `Project` a `_todo` set
 with which to remember every task
 for which at least one input value has changed,
-and that therefore requires re-execution.
+and which therefore requires re-execution.
 Because only tasks in `_todo` are out-of-date,
-the build process can skip running any other tasks
+the build process can skip running any tasks
 unless they appear there.
 
 Again, Python’s convenient and unified design
@@ -1531,18 +1527,18 @@ calling title_of('tutorial.txt')
 Success!
 Only one document got rebuilt.
 The fact that `title_of()`, given a new input document,
-nevertheless returned the same value means that all further
+nevertheless returned the same value, means that all further
 downstream tasks were insulated from the change
 and did not get re-invoked.
 
 ## Conclusion
 
 There exist languages and programming methodologies
-under which Contingent would be a suffocating forest of tiny classes
-giving useless and verbose names to every concept in the problem domain.
+under which Contingent would be a suffocating forest of tiny classes,
+with verbose names given to every concept in the problem domain.
 
 When programming Contingent in Python, however,
-we skipped the creation of a dozen classes that could have existed,
+we skipped the creation of a dozen possible classes 
 like `TaskArgument` and `CachedResult` and `ConsequenceList`.
 We instead drew upon Python’s strong tradition
 of solving generic problems with generic data structures,

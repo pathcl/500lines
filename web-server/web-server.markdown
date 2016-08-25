@@ -1,8 +1,8 @@
 title: A Simple Web Server
 author: Greg Wilson
-
-_Greg Wilson is the founder of Software Carpentry, a crash course in computing skills for scientists and engineers.  He has worked for 30 years in in both industry and academia, and is the author or editor of several books on computing, including the 2008 Jolt Award winner "Beautiful Code" and the first two volumes of "The Architecture of Open Source Applications". Greg received a Ph.D. in Computer Science from the University of Edinburgh in 1993._
-
+<markdown>
+_[Greg Wilson](https://twitter.com/gvwilson) is the founder of Software Carpentry, a crash course in computing skills for scientists and engineers.  He has worked for 30 years in both industry and academia, and is the author or editor of several books on computing, including the 2008 Jolt Award winner *Beautiful Code* and the first two volumes of *The Architecture of Open Source Applications*. Greg received a PhD in Computer Science from the University of Edinburgh in 1993._
+</markdown>
 ## Introduction
 
 The web has changed society in countless ways over the last two decades,
@@ -36,7 +36,7 @@ such as `174.136.14.108`;
 the Domain Name System (DNS) matches these numbers to symbolic names like `aosabook.org`
 that are easier for human beings to remember.
 
-A port number is just a number in the range 0-65535
+A port number is a number in the range 0-65535
 that uniquely identifies the socket on the host machine.
 (If an IP address is like a company's phone number,
 then a port number is like an extension.)
@@ -52,7 +52,7 @@ The data may be copied from a file on disk,
 generated dynamically by a program,
 or some mix of the two.
 
-\aosafigure{web-server-images/http-cycle.png}{The HTTP Cycle}{500l.web-server.cycle}
+\aosafigure[240pt]{web-server-images/http-cycle.png}{The HTTP Cycle}{500l.web-server.cycle}
 
 The most important thing about an HTTP request is that it's just text:
 any program that wants to can create one or parse one.
@@ -60,7 +60,7 @@ In order to be understood,
 though,
 that text must have the parts shown in \aosafigref{500l.web-server.request}.
 
-\aosafigure{web-server-images/http-request.png}{An HTTP Request}{500l.web-server.request}
+\aosafigure[240pt]{web-server-images/http-request.png}{An HTTP Request}{500l.web-server.request}
 
 The HTTP method is almost always either "GET" (to fetch information)
 or "POST" (to submit form data or upload files).
@@ -91,8 +91,8 @@ This is used when submitting data via web forms,
 when uploading files,
 and so on.
 There must be a blank line between the last header and the start of the body
-to signal the end of the headers;
-forgetting it is a common mistake.
+to signal the end of the headers.
+
 
 One header,
 called `Content-Length`,
@@ -100,7 +100,7 @@ tells the server how many bytes to expect to read in the body of the request.
 
 HTTP responses are formatted like HTTP requests (\aosafigref{500l.web-server.response}):
 
-\aosafigure{web-server-images/http-response.png}{An HTTP Response}{500l.web-server.response}
+\aosafigure[240pt]{web-server-images/http-response.png}{An HTTP Response}{500l.web-server.response}
 
 The version, headers, and body have the same form and meaning.
 The status code is a number indicating what happened when the request was processed:
@@ -110,24 +110,26 @@ and other codes have other meanings.
 The status phrase repeats that information in a human-readable phrase like "OK" or "not found".
 
 For the purposes of this chapter
-there are only two other things we need to know about HTTP
+there are only two other things we need to know about HTTP.
+
 The first is that it is *stateless*:
 each request is handled on its own,
 and the server doesn't remember anything between one request and the next.
 If an application wants to keep track of something like a user's identity,
 it must do so itself.
-The usual way to do this is with a cookie,
-which is just a short character string that the server sends to the client,
-and the client later returns to the server.
 
-When a user signs in,
+The usual way to do this is with a cookie,
+which is a short character string that the server sends to the client,
+and the client later returns to the server.
+When a user performs some function that requires state to be saved across several requests,
 the server creates a new cookie,
 stores it in a database,
 and sends it to her browser.
 Each time her browser sends the cookie back,
 the server uses it to look up information about what the user is doing.
 
-The second is that a URL can be supplemented with parameters
+The second thing we need to know about HTTP 
+is that a URL can be supplemented with parameters
 to provide even more information.
 For example,
 if we're using a search engine,
@@ -138,7 +140,7 @@ We do this by adding '?' to the URL
 followed by 'key=value' pairs separated by '&amp;'.
 For example,
 the URL `http://www.google.ca?q=Python`
-ask Google to search for pages related to Python:
+asks Google to search for pages related to Python:
 the key is the letter 'q',
 and the value is 'Python'.
 The longer query
@@ -168,13 +170,12 @@ so most people use libraries to do most of the work.
 Python comes with such a library called `urllib2`
 (because it's a replacement for an earlier library called `urllib`),
 but it exposes a lot of plumbing that most people never want to care about.
-Instead,
-we recommend using the [Requests](https://pypi.python.org/pypi/requests) library.
-Here's an example that uses it to download a page from our web site:
+The [Requests](https://pypi.python.org/pypi/requests) library is an easier-to-use alternative to `urllib2`.
+Here's an example that uses it to download a page from the AOSA book site:
 
 ```python
 import requests
-response = requests.get('http://aosabook.org/en/500lines/web-server/testpage.html')
+response = requests.get('http://aosabook.org/en/500L/web-server/testpage.html')
 print 'status code:', response.status_code
 print 'content length:', response.headers['content-length']
 print response.text
@@ -202,7 +203,7 @@ and `text` is the actual data
 We're now ready to write our first simple web server.
 The basic idea is simple:
 
-1.  wait for someone to connect to our server and send an HTTP request;
+1.  Wait for someone to connect to our server and send an HTTP request;
 2.  parse that request;
 3.  figure out what it's asking for;
 4.  fetch that data (or generate it dynamically);
@@ -266,7 +267,7 @@ we still need the last three lines to actually start a server running.
 The first of these lines defines the server's address as a tuple:
 the empty string means "run on the current machine",
 and 8080 is the port.
-We then create an instance of `BaseHTTPServer.HTTPServer`
+We then create an instance of \newline `BaseHTTPServer.HTTPServer`
 with that address and the name of our request handler class as parameters,
 then ask it to run forever
 (which in practice means until we kill it with Control-C).
@@ -337,7 +338,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write(page)
 ```
 
-The template[^templates] for the page we want to display is
+The template for the page we want to display is
 just a string containing an HTML table
 with some formatting placeholders:
 
@@ -358,7 +359,7 @@ with some formatting placeholders:
 '''
 ```
 
-and the method that fills this in is:
+\noindent and the method that fills this in is:
 
 ```python
     def create_page(self):
@@ -372,8 +373,6 @@ and the method that fills this in is:
         page = self.Page.format(**values)
         return page
 ```
-
-[^templates]: You can find a full treatment of templates in \aosachapref{s:template-engine}.
 
 The main body of the program is unchanged:
 as before,
@@ -459,11 +458,11 @@ and uses our existing `send_content` to send it back to the client:
             self.handle_error(msg)
 ```
 
-Note that we open the file in binary mode --- the 'b' in 'rb' --- so that
+Note that we open the file in binary mode&mdash;the 'b' in 'rb'&mdash;so that
 Python won't try to "help" us by altering byte sequences that look like a Windows line ending.
 Note also that reading the whole file into memory when serving it is a bad idea in real life,
 where the file might be several gigabytes of video data.
-Handling that situation is outside the scope of this chapter...
+Handling that situation is outside the scope of this chapter.
 
 To finish off this class,
 we need to write the error handling method
@@ -607,7 +606,7 @@ class case_always_fail(object):
         raise ServerException("Unknown object '{0}'".format(handler.path))
 ```
 
-and here's how we construct the list of case handlers
+\noindent and here's how we construct the list of case handlers
 at the top of the `RequestHandler` class:
 
 ```python 
@@ -655,10 +654,9 @@ Here,
 the helper method `index_path` constructs the path to the `index.html` file;
 putting it in the case handler prevents clutter in the main `RequestHandler`.
 `test` checks whether the path is a directory containing an `index.html` page,
-and `act` just asks the main request handler to serve that page.
+and `act` asks the main request handler to serve that page.
 
-The only change needed to `RequestHandler` to include this logic
-is to add a `case_directory_index_file` object to our `Cases` list:
+The only change needed to `RequestHandler` is to add a `case_directory_index_file` object to our `Cases` list:
 
 ```python 
     Cases = [case_no_file(),
@@ -726,7 +724,8 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def list_dir(self, full_path):
         try:
             entries = os.listdir(full_path)
-            bullets = ['<li>{0}</li>'.format(e) for e in entries if not e.startswith('.')]
+            bullets = ['<li>{0}</li>'.format(e) 
+                for e in entries if not e.startswith('.')]
             page = self.Listing_Page.format('\n'.join(bullets))
             self.send_content(page)
         except OSError as msg:
@@ -740,7 +739,7 @@ Of course,
 most people won't want to edit the source of their web server
 in order to add new functionality.
 To save them from having to do so,
-servers have from the start supported a mechanism called
+servers have always supported a mechanism called
 the Common Gateway Interface (CGI),
 which provides a standard way for a web server to run an external program
 in order to satisfy a request.
@@ -776,9 +775,8 @@ class case_cgi_file(object):
 ```
 
 The test is simple:
-does the file path end with `.py`?
-The action is equally simple:
-tell `RequestHandler` to run this program.
+does the file path end with `.py`? 
+If so, `RequestHandler` runs this program.
 
 ```python 
     def run_cgi(self, full_path):
@@ -806,9 +804,9 @@ the core idea is simple:
 2.  Capture whatever that subprocess sends to standard output.
 3.  Send that back to the client that made the request.
 
-The full CGI protocol is much richer than this---in particular,
+The full CGI protocol is much richer than this&mdash;in particular,
 it allows for parameters in the URL,
-which the server passes into the program being run---but
+which the server passes into the program being run&mdash;but
 those details don't affect the overall architecture of the system...
 
 ...which is once again becoming rather tangled.
@@ -878,7 +876,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write(content)
 ```
 
-while the parent class for our case handlers is:
+\noindent while the parent class for our case handlers is:
 
 ```python 
 class base_case(object):
@@ -903,7 +901,7 @@ class base_case(object):
         assert False, 'Not implemented.'
 ```
 
-and the handler for an existing file
+\noindent and the handler for an existing file
 (just to pick an example at random) is:
 
 ```python 
@@ -941,4 +939,4 @@ have allowed us to ignore the details of handling socket connections
 and parsing HTTP requests.
 
 These ideas are generally useful; 
-see if you can find the opportunity to use them in your own projects. 
+see if you can find ways to use them in your own projects. 

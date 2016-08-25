@@ -1,8 +1,8 @@
 title: A Rejection Sampler
 author: Jessica B. Hamrick
-
+<markdown>
 _Jess is a Ph.D. student at UC Berkeley where she studies human cognition by combining probabilistic models from machine learning with behavioral experiments from cognitive science. In her spare time, Jess is a core contributor to IPython and Jupyter. She also holds a B.S. and M.Eng. in Computer Science from MIT._
-
+</markdown>
 ## Introduction
 
 Frequently, in computer science and engineering, we run into problems
@@ -80,13 +80,12 @@ the specific application.
 
 #### A Brief Aside About Notation
 
-Typically when we talk about probability distributions, we will use
-mathematical notation like $p(x)$ to indicate that $p$ is the
-*probability density function* (PDF) or *probability mass function*
-(PMF) over values $x$ of a random variable. A PDF is a *continuous*
-function $p(x)$ such that $\int_{-\infty}^\infty p(x)\ \mathrm{d}x=1$,
-whereas a PMF is a *discrete* function $p(x)$ such that $\sum_{x\in
-\mathbb{Z}} p(x)=1$, where $\mathbb{Z}$ is the set of all integers.
+We will use mathematical notation like $p(x)$ to indicate that $p$ is the
+*probability density function* (PDF) or *probability mass function* (PMF) over
+values $x$ of a random variable. A PDF is a *continuous* function $p(x)$ such
+that $\int_{-\infty}^\infty p(x)\ \mathrm{d}x=1$, whereas a PMF is a *discrete*
+function $p(x)$ such that $\sum_{x\in \mathbb{Z}} p(x)=1$, where $\mathbb{Z}$
+is the set of all integers.
 
 The probability distribution in the case of the dart
 board would be a continuous PDF, while the probability distribution in
@@ -102,7 +101,7 @@ probability density at the value $x$).
 Given the PDF or PMF, we might also want to *sample* a value $x$ in a
 manner proportional to the distribution (such that we are more likely
 to get a sample at places where the probability is higher). In
-mathematical notation, we would write this as $x\sim p$, to indicate
+mathematical notation, we write this as $x\sim p$, to indicate
 that $x$ is sampled proportional to $p$.
 
 ## Sampling Magical Items
@@ -242,10 +241,10 @@ necessary in a bit). The `rso` object is what we'll use later to
 produce random numbers. (We'll talk more about what it is a bit later
 as well).
 
-Before we get into the rest of the class, I want to briefly go over
+Before we get into the rest of the class, let's go over
 two points related to the constructor.
 
-#### Descriptive vs. Mathematic Variable Names
+#### Descriptive versus Mathematic Variable Names
 
 Usually, programmers are encouraged to use descriptive variable names:
 for example, it would be considered better practice to use the names
@@ -264,7 +263,7 @@ etc. So, if you were translating them directly into code, the easiest
 variable names would be `x`, `y`, and `alpha`. Obviously, these are
 not the most informative variable names (the name `x` does not convey
 much information), but having more descriptive variable names can also
-make it harder to go back and forth between the the code and the
+make it harder to switch between the the code and the
 equation.
 
 I think that when you are writing code that
@@ -334,10 +333,10 @@ numbers come from. We create it as follows:
 >>> rso = np.random.RandomState(230489)
 ```
 
-where the number passed to the `RandomState` constructor is the *seed*
-for the random number generator. As long as we instantiate it with the
-same seed, a `RandomState` object will produce the same "random"
-numbers in the same order, thus ensuring replicability:
+\noindent where the number passed to the `RandomState` constructor is the
+*seed* for the random number generator. As long as we instantiate it with the
+same seed, a `RandomState` object will produce the same "random" numbers in the
+same order, thus ensuring replicability:
 
 ```python
 >>> rso.rand()
@@ -361,7 +360,7 @@ but I do want to have the *option* of using it (which, if I were to
 just use the `np.random` module, I would not be able to do).
 
 So, if the `rso` variable is not given, then the constructor defaults
-to using `np.random.multinomial`. Otherwise, it uses the multinomial
+to `np.random.multinomial`. Otherwise, it uses the multinomial
 sampler from the `RandomState` object itself[^rng].
 
 [^rng]: The functions in `np.random` actually do rely on a random
@@ -457,7 +456,7 @@ $$
 p(\mathbf{x}; \mathbf{p}) = \frac{(\sum_{i=1}^k x_i)!}{x_1!\cdots{}x_k!}p_1^{x_1}\cdots{}p_k^{x_k}
 $$
 
-where $\mathbf{x}=[x_1, \ldots{}, x_k]$ is a vector of length $k$
+\noindent where $\mathbf{x}=[x_1, \ldots{}, x_k]$ is a vector of length $k$
 specifying the number of times each event happened, and
 $\mathbf{p}=[p_1, \ldots{}, p_k]$ is a vector specifying the
 probability of each event occurring. As mentioned above, the event
@@ -525,12 +524,10 @@ would be our lower bound if we did not work in log space):
 ```
 
 So, by working with log values, we can greatly expand our range of
-representable numbers.
-
-Moreover, we can perform multiplication with logs by using addition,
- because $\log(x\cdot{}y) = \log(x) +
- \log(y)$. Thus, if we do the multiplication above with logs, we do
- not have to worry (as much) about loss of precision due to underflow:
+representable numbers.  Moreover, we can perform multiplication with logs by
+using addition, because $\log(x\cdot{}y) = \log(x) + \log(y)$. Thus, if we do
+the multiplication above with logs, we do not have to worry (as much) about
+loss of precision due to underflow:
 
 ```python
 >>> # the result of multiplying small probabilities
@@ -543,8 +540,7 @@ Moreover, we can perform multiplication with logs by using addition,
 
 Of course, this solution is not a magic bullet. If we need to derive
 the number from the logarithm (for example, to add probabilities,
-rather than multiply them), then we are back to the issue of
-underflow:
+rather than multiply them), then we are back to underflow:
 
 ```python
 >>> tiny*tiny
@@ -556,7 +552,7 @@ underflow:
 Still, doing all our computations with logs can save a lot of
 headache. We might be forced to lose that precision if we need to go
 back to the original numbers, but we at least maintain *some* information about
-the probabilities---enough to compare them, for example---that would
+the probabilities&mdash;enough to compare them, for example&mdash;that would
 otherwise be lost.
 
 #### Writing the PMF Code
@@ -792,9 +788,9 @@ def _sample_stats(self):
     return stats
 ```
 
-We *could* have made these a single method---especially since
+We *could* have made these a single method&mdash;especially since
 `_sample_stats` is the only function that depends on
-`_sample_bonus`---but I have chosen to keep them separate, both
+`_sample_bonus`&mdash;but I have chosen to keep them separate, both
 because it makes the sampling routine easier to understand, and
 because breaking it up into smaller pieces makes the code easier to
 test.
@@ -822,8 +818,8 @@ def sample(self):
 The `sample` function does essentially the same thing as
 `_sample_stats`, except that it returns a dictionary with the stats'
 names as keys. This provides a clean and understandable interface for
-sampling items---it is obvious which stats have how many bonus
-points---but it also keeps open the option of using just
+sampling items&mdash;it is obvious which stats have how many bonus
+points&mdash;but it also keeps open the option of using just
 `_sample_stats` if one needs to take many samples and efficiency is
 required.
 
@@ -1140,7 +1136,7 @@ Now we can draw a bunch of samples, and compute the 50th percentile
 If we were to plot a histogram of how many samples we got for each
 amount of damage, it would look something like \aosafigref{500l.sampler.damage}.
 
-\aosafigure[144pt]{sampler-images/damage_distribution.png}{Damage Distribution}{500l.sampler.damage}
+\aosafigure[180pt]{sampler-images/damage_distribution.png}{Damage Distribution}{500l.sampler.damage}
 
 There is a pretty wide range of damage that the player could
 potentially inflict, but it has a long tail: the 50th percentile is at
@@ -1175,5 +1171,5 @@ know (e.g., discovering how much damage a player with two items is
 likely to deal). Almost every type of sampling you might encounter
 falls under one of these two categories; the differences only have to
 do with what distributions you are sampling from. The general
-structure of the code---independent of those distributions---remains
+structure of the code&mdash;independent of those distributions&mdash;remains
 the same.

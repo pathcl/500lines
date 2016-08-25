@@ -1,12 +1,12 @@
 title: A 3D Modeller
 author: Erick Dransch
-
+<markdown>
 _Erick is a software developer and 2D and 3D computer graphics enthusiast. He has worked on video games, 3D special effects software, and computer aided design tools. If it involves simulating reality, chances are he'd like to learn more about it. You can find him online at [erickdransch.com](http://erickdransch.com)._
-
+</markdown>
 ## Introduction
 Humans are innately creative. We continuously design and build novel, useful, and interesting things. In modern times, we write software to assist in the design and creation process. 
 Computer-aided design (CAD) software allows creators to design buildings, bridges, video game art, 
-film monsters, 3D printable objects, and many other things on a computer before building a physical version of the design. 
+film monsters, 3D printable objects, and many other things before building a physical version of the design. 
 
 At their core, CAD tools are a method of abstracting the 3-dimensional design into something that can be viewed and edited on a 2-dimensional screen. 
 To fulfill that definition, CAD tools must offer three basic pieces of functionality.
@@ -16,7 +16,7 @@ The CAD tool must model how we perceive objects, and draw them to the screen in 
 Thirdly, the CAD tool must offer a way to interact with the object being designed. The user must be able to add to and modify the design in order to produce the desired result.
 Additionally, all tools would need a way to save and load designs from disk so that users can collaborate, share, and save their work.
 
-A domain-specific CAD tool offers many additional features for the specific requirements of the domain. For example, an architecture CAD tool would offer physics simulations to test weather and climate stresses on the building, 
+A domain-specific CAD tool offers many additional features for the specific requirements of the domain. For example, an architecture CAD tool would offer physics simulations to test climate stresses on the building, 
 a 3D printing tool would have features that check whether the object is actually valid to print, an electrical CAD tool would simulate the physics of electricity running through copper, and a film special effects suite would
 include features to accurately simulate pyrokinetics. 
 
@@ -156,10 +156,10 @@ A vector is an $x$, $y$, and $z$ value representing the difference between two p
 ### Transformation Matrix
 In computer graphics, it is convenient to use multiple different coordinate spaces for different types of points. Transformation matrices convert points from one coordinate space to another coordinate space.
 To convert a vector $v$ from one coordinate space to another, we multiply by a transformation matrix $M$: $v' = M v$.
-Some common transformation matrices are translations (moves), scaling, and rotations.
+Some common transformation matrices are translations, scaling, and rotations.
 
 ### Model, World, View, and Projection Coordinate Spaces
-\aosafigure[240pt]{modeller-images/newtranspipe.png}{Transformation Pipeline }{500l.modeller.newtranspipe}
+\aosafigure[250pt]{modeller-images/newtranspipe.png}{Transformation Pipeline}{500l.modeller.newtranspipe}
 
 To draw an item to the screen, we need to convert between a few different coordinate spaces.
 
@@ -204,7 +204,8 @@ Finally, `glFlush` signals to the graphics driver that we are ready for the buff
         self.modelView = numpy.transpose(currentModelView)
         self.inverseModelView = inv(numpy.transpose(currentModelView))
 
-        # render the scene. This will call the render function for each object in the scene
+        # render the scene. This will call the render function for each object
+        # in the scene
         self.scene.render()
 
         # draw the grid
@@ -232,7 +233,7 @@ Finally, `glFlush` signals to the graphics driver that we are ready for the buff
 ### What to Render: The Scene
 Now that we've initialized the rendering pipeline to handle drawing in the world coordinate space, what are we going to render? Recall that our goal is 
 to have a design consisting of 3D models. We need a data structure to contain the design, and we need use this data structure to render the design.
-Notice above that we call `self.scene.render()` from the viewer's render loop. What exactly is the scene?
+Notice above that we call `self.scene.render()` from the viewer's render loop. What is the scene?
 
 The `Scene` class is the interface to the data structure we use to represent the design. It abstracts away details of the data structure and provides the 
 necessary interface functions required to interact with the design, including functions to render, add items, and manipulate items. There is one `Scene` object, owned by the viewer.
@@ -257,7 +258,7 @@ class Scene(object):
         self.node_list.append(node)
 
     def render(self):
-        """ Render the scene. This function simply calls the render function for each node. """
+        """ Render the scene. """
         for node in self.node_list:
             node.render()
 ```
@@ -270,7 +271,7 @@ In object-oriented software, we write `Node` as an abstract base class. Any clas
 This base class allows us to reason about the scene abstractly. 
 The rest of the code base doesn't need to know about the details of the objects it displays; it only needs to know that they are of the class `Node`. 
 
-Each type of `Node` defines its own behavior for rendering itself and for any other necessary interactions.
+Each type of `Node` defines its own behavior for rendering itself and for any other interactions.
 The `Node` keeps track of important data about itself: translation matrix, scale matrix, color, etc. Multiplying the node's translation matrix by
 its scaling matrix gives the transformation matrix from the node's model coordinate space to the world coordinate space.
 The node also stores an axis-aligned bounding box (AABB). We'll see more about AABBs when we discuss selection below.
@@ -304,7 +305,8 @@ class Node(object):
         glPopMatrix()
 
     def render_self(self):
-        raise NotImplementedError("The Abstract Node Class doesn't define 'render_self'")
+        raise NotImplementedError(
+            "The Abstract Node Class doesn't define 'render_self'")
 
 class Primitive(Node):
     def __init__(self):
@@ -342,8 +344,9 @@ To render primitives, we use the call lists feature from OpenGL.
 An OpenGL call list is a series of OpenGL calls that are defined once and bundled together under a single name.
 The calls can be dispatched with `glCallList(LIST_NAME)`. Each primitive (`Sphere` and `Cube`) defines the call list required to render it (not shown).
 
-For example, the call list for a cube draws the 6 faces of the cube, with the center at the origin and the edges exactly 1 unit long.
-```
+For example, the call list for a cube draws the 6 faces of the cube, with the center at the origin and the edges exactly 1 unit long. \newpage
+
+```python
 # Pseudocode Cube definition
 # Left face
 ((-0.5, -0.5, -0.5), (-0.5, -0.5, 0.5), (-0.5, 0.5, 0.5), (-0.5, 0.5, -0.5)),
@@ -383,8 +386,11 @@ class HierarchicalNode(Node):
     def render_self(self):
         for child in self.child_nodes:
             child.render()
+```
 
+\newpage
 
+```python
 class SnowFigure(HierarchicalNode):
     def __init__(self):
         super(SnowFigure, self).__init__()
@@ -546,9 +552,7 @@ When user interface code needs to trigger an event on the scene, the `Interactio
 This application-level callback system abstracts away the need for the rest of the system to know about operating system input. Each application-level callback represents a meaningful request within the application.
 The `Interaction` class acts as a translator between operating system events and application-level events.
 This means that if we decided to port the modeller to another toolkit in addition to GLUT, we would only need to replace the `Interaction` class
-with a class that converts the input from the new toolkit into the same set of meaningful application-level callbacks.
-
-We use the following callbacks and arguments:
+with a class that converts the input from the new toolkit into the same set of meaningful application-level callbacks. We use callbacks and arguments in \aosatblref{500l.tbl.callbacks}.
 
 <markdown>
 |Callback       | Arguments          | Purpose  |
@@ -623,7 +627,7 @@ We interact with the trackball using the `drag_to` function, with the current lo
 self.trackball.drag_to(self.mouse_loc[0], self.mouse_loc[1], dx, dy)
 ```
 
-The resulting rotation matrix is retrieved as `trackball.matrix` in the viewer when the scene is rendered.
+The resulting rotation matrix is `trackball.matrix` in the viewer when the scene is rendered.
 
 #### Aside: Quaternions
 Rotations are traditionally represented in one of two ways. The first is a rotation value around each axis; you could store this as a 3-tuple of floating point numbers.
@@ -855,7 +859,7 @@ When the user modifies the scale of a node, the resulting scaling matrix is mult
         self.aabb.scale(s)
 ```
 
-The function `scaling` returns such a matrix, given a list representing the $x$, $y$, and $z$ scaling factors.
+The function `scaling` returns such a matrix, given a list of the $x$, $y$, and $z$ scaling factors.
 
 ```python
 def scaling(scale):
@@ -873,7 +877,7 @@ In order to translate a node, we use the same ray calculation we used for pickin
 In order to determine where on the ray to place the node, we need to know the node's distance from the camera. Since we stored the node's location and distance
 from the camera when it was selected (in the `pick` function), we can use that data here.
 We find the point that is the same distance from the camera along the target ray and we calculate the vector difference between the new and old locations.
-We then translate the node by the resulting vector.
+We then translate the node by the resulting vector. 
 
 ```python
     # class Scene
@@ -925,7 +929,9 @@ translation matrix for use during rendering.
 ```python
     # class Node
     def translate(self, x, y, z):
-        self.translation_matrix = numpy.dot(self.translation_matrix, translation([x, y, z]))
+        self.translation_matrix = numpy.dot(
+            self.translation_matrix, 
+            translation([x, y, z]))
 ```
 
 The `translation` function returns a translation matrix given a list representing the $x$, $y$, and $z$ translation distances.
@@ -953,7 +959,7 @@ Node placement uses techniques from both picking and translation. We use the sam
 To place a new node, we first create the new instance of the corresponding type of node and add it to the scene.
 We want to place the node underneath the user's cursor, so we find a point on the ray, at a fixed distance from the camera.
 Again, the ray is represented in camera space, so we convert the resulting translation vector into the world coordinate space by multiplying it by the inverse modelview matrix.
-Finally, we translate the new node by the calculated vector.
+Finally, we translate the new node by the calculated vector. \newpage
 
 ```python
     # class Scene

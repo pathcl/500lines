@@ -1,12 +1,12 @@
 title: A Simple Object Model
 author: Carl Friedrich Bolz
-
+<markdown>
 _Carl Friedrich Bolz is a researcher at King's College London and is broadly
 interested in the implementation and optimization of all kinds of dynamic
 languages. He is one of the core authors of PyPy/RPython and has worked on
 implementations of Prolog, Racket, Smalltalk, PHP and Ruby. He's
 [\@cfbolz](https://twitter.com/cfbolz) on Twitter._
-
+</markdown>
 ## Introduction
 
 Object-oriented programming is one of the major programming paradigms in use
@@ -245,7 +245,7 @@ metaclass of every class.
 
 \aosafigure[240pt]{objmodel-images/inheritance.png}{Inheritance}{500l.objmodel.inheritance}
 
-Now the first test passes. The second test checks that reading and writing attributes works on classes as well. It's easy to write, and passes immediately. 
+Now the first test passes. The second test checks that reading and writing attributes works on classes as well. It's easy to write, and passes immediately. \newpage
 
 ```python
 def test_read_write_field_class():
@@ -429,8 +429,7 @@ distinction between a method-based model and an attribute-based model. This is
 one of the core differences between Smalltalk, Ruby, and JavaScript on the one hand
 and Python and Lua on the other hand. 
 
-The method-based model has the calling of
-methods as the primitive operation of program execution:
+The method-based model has the method-calling as the primitive of program execution:
 
 ```python
 result = obj.f(arg1, arg2)
@@ -481,7 +480,7 @@ def test_bound_method():
     assert m(10) == 12
 ```
 
-While the setup of the classes is the same as the corresponding test for
+While the setup is the same as the corresponding test for
 method calls, the way that the methods are called is different. First, the
 attribute with the name of the method is looked up on the object. The result of
 that lookup operation is a *bound method*, an object that encapsulates both the
@@ -499,8 +498,8 @@ implementation. If the attribute is not found in the dictionary, it is looked
 for in the class. If it is found in the class, and the attribute is a callable,
 it needs to be turned into a bound method. To emulate a bound method we simply
 use a closure. In addition to changing ``Base.read_attr`` we can also change
-``Base.callmethod`` to use the new approach to calling methods to make sure the
-previous tests still pass.
+``Base.callmethod`` to use the new approach to calling methods to make sure all
+the tests still pass.
 
 ```python
 class Base(object):
@@ -570,12 +569,12 @@ early Smalltalk[^smalltalk] systems under the name ``doesNotUnderstand:``.
 [^smalltalk]: A. Goldberg, Smalltalk-80: The Language and its Implementation. Addison-Wesley, 1983, page 61.
 
 The case of ``__setattr__`` is a bit different. Since setting an attribute
-always creates it, ``__setattr__`` is always called when setting an attribute.
-To make sure that a ``__setattr__`` method always exists, the ``OBJECT`` class
-has a definition of ``__setattr__``. This base implementation simply does what
-setting an attribute did so far, which is write the attribute into the object's
-dictionary. This also makes it possible for a user-defined ``__setattr__`` to
-delegate to the base ``OBJECT.__setattr__`` in some cases.
+always creates it, \newline ``__setattr__`` is always called when setting an
+attribute.  To make sure that a ``__setattr__`` method always exists, the
+``OBJECT`` class has a definition of ``__setattr__``. This base implementation
+simply does what setting an attribute did so far, which is write the attribute
+into the object's dictionary. This also makes it possible for a user-defined
+``__setattr__`` to delegate to the base ``OBJECT.__setattr__`` in some cases.
 
 A test for these two special methods is the following:
 
@@ -630,7 +629,7 @@ def test_getattr():
 ```
 
 To pass these tests, the ``Base.read_attr`` and ``Base.write_attr`` methods
-need to be changed as follows:
+need to be changed:
 
 ``` python
 class Base(object):
@@ -685,7 +684,7 @@ The above test to provide automatic conversion between
 different temperature
 scales worked but was annoying to write, as the attribute name needed
 to be checked explicitly in the ``__getattr__`` and ``__setattr__`` methods. To
-get around that clumsiness, the *descriptor protocol* was introduced in
+get around this, the *descriptor protocol* was introduced in
 Python.
 
 While ``__getattr__`` and ``__setattr__`` are called on the object the attribute
@@ -697,7 +696,7 @@ the most important use case for the descriptor protocol in Python is the
 implementation of ``staticmethod``, ``classmethod`` and ``property``.
 
 In this subsection we will introduce the subset of the descriptor protocol which deals with binding objects. This is done using the special method ``__get__``,
-and is best explained with an example as a test:
+and is best explained with an example test:
 
 ```python
 def test_get():
@@ -733,7 +732,7 @@ instance where the lookup was done[^secondarg].
 found, though we will ignore that here.
 
 Implementing this behaviour is easy. We simply need to change ``_is_bindable``
-and ``_make_boundmethod``:
+and \newline ``_make_boundmethod``:
 
 ```python
 def _is_bindable(meth):
@@ -860,7 +859,7 @@ a different map, which ``next_map`` computes. The method uses the ``next_maps``
 dictionary to cache already created maps. That way, objects that have the same
 layout also end up using the same ``Map`` object.
 
-\aosafigure[240pt]{objmodel-images/maptransition.png}{Map transitions}{500l.objmodel.maptransition}
+\aosafigure[166pt]{objmodel-images/maptransition.png}{Map transitions}{500l.objmodel.maptransition}
 
 The ``Instance`` implementation that uses maps looks like this:
 

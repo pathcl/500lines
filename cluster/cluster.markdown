@@ -1,12 +1,12 @@
 title: Clustering by Consensus
 author: Dustin J. Mitchell
-
+<markdown>
 _Dustin is an open source software developer and release engineer at Mozilla.
 He has worked on projects as varied as a host configuration system in Puppet, a
 Flask-based web framework, unit tests for firewall configurations, and a
 continuous integration framework in Twisted Python. Find him as [\@djmitche](http://github.com/djmitche) on
 GitHub or at [dustin@mozilla.com](mailto:dustin@mozilla.com)._
-
+</markdown>
 ## Introduction
 
 In this chapter, we'll explore implementation of a network protocol designed to support reliable distributed computation.
@@ -44,7 +44,6 @@ Operations such as "transfer" or "get-balance", together with their parameters (
 The state machine for this application is simple:
 
 ```python
-
     def execute_operation(state, operation):
         if operation.name == 'deposit':
             if not verify_signature(operation.deposit_signature):
@@ -97,8 +96,7 @@ The protocol operates in a series of ballots, each led by a single member of the
 Each ballot has a unique ballot number based on an integer and the proposer's identity.
 The proposer's goal is to get a majority of cluster members, acting as acceptors, to accept its value, but only if another value has not already been decided.
 
-
-\aosafigure{cluster-images/ballot.png}{A Ballot}{500l.cluster.ballot}
+\aosafigure[240pt]{cluster-images/ballot.png}{A Ballot}{500l.cluster.ballot}
 
 A ballot begins with the proposer sending a ``Prepare`` message with the ballot number *N* to the acceptors and waiting to hear from a majority (\aosafigref{500l.cluster.ballot}.)
 
@@ -114,7 +112,11 @@ Otherwise, it sends the value from the highest-numbered promise.
 Unless it would violate a promise, each acceptor records the value from the ``Accept`` message as accepted and replies with an ``Accepted`` message.
 The ballot is complete and the value decided when the proposer has heard its ballot number from a majority of acceptors.
 
-Returning to the example, initially no other value has been accepted, so the acceptors all send back a ``Promise`` with no value, and the proposer sends an ``Accept`` containing its value, say ``operation(name='deposit', amount=100.00, destination_account='Mike DiBernardo')``.
+Returning to the example, initially no other value has been accepted, so the acceptors all send back a ``Promise`` with no value, and the proposer sends an ``Accept`` containing its value, say:
+
+```python
+    operation(name='deposit', amount=100.00, destination_account='Mike DiBernardo')
+```
 
 If another proposer later initiates a ballot with a lower ballot number and a different operation (say, a transfer to acount ``'Dustin J. Mitchell'``), the acceptors will simply not accept it.
 If that ballot has a larger ballot number, then the ``Promise`` from the acceptors will inform the proposer about Michael's $100.00 deposit operation, and the proposer will send that value in the ``Accept`` message instead of the transfer to Dustin.
@@ -128,7 +130,7 @@ Both proposers then re-propose, and hopefully one wins, but the deadlock can con
 Consider the following sequence of events:
 
 * Proposer A performs the ``Prepare``/``Promise`` phase for ballot number 1.
-* Before Proposer A manages to get its proposal accepted, Proposer B performs a ``Prepare``/``Promise`` phase for ballot number 2.
+* Before Proposer A manages to get its proposal accepted, Proposer B performs a \newline ``Prepare``/``Promise`` phase for ballot number 2.
 * When Proposer A finally sends its ``Accept`` with ballot number 1, the acceptors reject it because they have already promised ballot number 2.
 * Proposer A reacts by immediately sending a ``Prepare`` with a higher ballot number (3), before Proposer B can send its ``Accept`` message.
 * Proposer B's subsequent ``Accept`` is rejected, and the process repeats.
@@ -197,7 +199,6 @@ Let's get started.
 Cluster's protocol uses fifteen different message types, each defined as a Python [``namedtuple``](https://docs.python.org/3/library/collections.html).
 
 ```python
-
     Accepted = namedtuple('Accepted', ['slot', 'ballot_num'])
     Accept = namedtuple('Accept', ['slot', 'ballot_num', 'proposal'])
     Decision = namedtuple('Decision', ['slot', 'proposal'])
@@ -244,16 +245,13 @@ The code also introduces a few constants, most of which define timeouts for vari
     LEADER_TIMEOUT = 1.0
     NULL_BALLOT = Ballot(-1, -1)  # sorts before all real ballots
     NOOP_PROPOSAL = Proposal(None, None, None)  # no-op to fill otherwise empty slots
-    
 ```
 
 Finally, Cluster uses two data types named to correspond to the protocol description:
 
 ```python
-
     Proposal = namedtuple('Proposal', ['caller', 'client_id', 'input'])
     Ballot = namedtuple('Ballot', ['n', 'leader'])
-    
 ```
 
 ### Component Model
@@ -333,7 +331,6 @@ The method uses a simple synchronized `Queue` to wait for the result from the pr
 
 
 ```python
-
 class Member(object):
 
     def __init__(self, state_machine, network, peers, seed=None,
@@ -361,7 +358,6 @@ class Member(object):
         output = q.get()
         self.requester = None
         return output
-    
 ```
 
 ### Role Classes
@@ -377,7 +373,6 @@ The result is a short class that is easy to compare to the protocol.
 For acceptors, Multi-Paxos looks a lot like Simple Paxos, with the addition of slot numbers to the messages.
 
 ```python
-
 class Acceptor(Role):
 
     def __init__(self, node):
@@ -409,6 +404,7 @@ class Acceptor(Role):
 ```
 
 #### Replica
+\label{sec.cluster.replica}
 
 The ``Replica`` class is the most complicated role class, as it has a few closely related responsibilities:
 
@@ -420,7 +416,7 @@ The ``Replica`` class is the most complicated role class, as it has a few closel
 The replica creates new proposals in response to ``Invoke`` messages from clients, selecting what it believes to be an unused slot and sending a ``Propose`` message to the current leader (\aosafigref{500l.cluster.replica}.)
 Furthermore, if the consensus for the selected slot is for a different proposal, the replica must re-propose with a new slot.
 
-\aosafigure{cluster-images/replica.png}{Replica Role Control Flow}{500l.cluster.replica}
+\aosafigure[240pt]{cluster-images/replica.png}{Replica Role Control Flow}{500l.cluster.replica}
 
 ``Decision`` messages represent slots on which the cluster has come to consensus.
 Here, replicas store the new decision, then run the state machine until it reaches an undecided slot.
@@ -450,17 +446,16 @@ When the acceptor role sends a ``Promise`` to a new leader, it sends an ``Accept
 
 The active leader sends ``Active`` messages as a heartbeat (\aosafigref{500l.cluster.active}.) If no such message arrives before the ``LEADER_TIMEOUT`` expires, the replica assumes the leader is dead and moves on to the next leader.  In this case, it's important that all replicas choose the *same* new leader, which we accomplish by sorting the members and selecting the next one in the list.
 
-\aosafigure{cluster-images/active.png}{Active}{500l.cluster.active}
+\aosafigure[240pt]{cluster-images/active.png}{Active}{500l.cluster.active}
 
 Finally, when a node joins the network, the bootstrap role sends a ``Join``
 message (\aosafigref{500l.cluster.bootstrap}.) The replica responds with a
 ``Welcome`` message containing its most recent state, allowing the new node to
 come up to speed quickly.
 
-\aosafigure{cluster-images/bootstrap.png}{Bootstrap}{500l.cluster.bootstrap}
+\aosafigure[240pt]{cluster-images/bootstrap.png}{Bootstrap}{500l.cluster.bootstrap}
 
 ```python
-
 class Replica(Role):
 
     def __init__(self, node, execute_fn, state, slot, decisions, peers):
@@ -468,7 +463,7 @@ class Replica(Role):
         self.execute_fn = execute_fn
         self.state = state
         self.slot = slot
-        self.decisions = decisions.copy()
+        self.decisions = decisions
         self.peers = peers
         self.proposals = {}
         # next slot num for a proposal (may lead slot)
@@ -492,7 +487,8 @@ class Replica(Role):
         # find a leader we think is working - either the latest we know of, or
         # ourselves (which may trigger a scout to make us the leader)
         leader = self.latest_leader or self.node.address
-        self.logger.info("proposing %s at slot %d to leader %s" % (proposal, slot, leader))
+        self.logger.info(
+            "proposing %s at slot %d to leader %s" % (proposal, slot, leader))
         self.node.send([leader], Propose(slot=slot, proposal=proposal))
 
     # handling decided proposals
@@ -509,7 +505,8 @@ class Replica(Role):
 
         # re-propose our proposal in a new slot if it lost its slot and wasn't a no-op
         our_proposal = self.proposals.get(slot)
-        if our_proposal is not None and our_proposal != proposal and our_proposal.caller:
+        if (our_proposal is not None and 
+            our_proposal != proposal and our_proposal.caller):
             self.propose(our_proposal)
 
         # execute any pending, decided proposals
@@ -568,7 +565,6 @@ class Replica(Role):
         if sender in self.peers:
             self.node.send([sender], Welcome(
                 state=self.state, slot=self.slot, decisions=self.decisions))
-    
 ```
 
 #### Leader, Scout, and Commander
@@ -580,7 +576,6 @@ An active leader can immediately send an ``Accept`` message in response to a ``P
 In keeping with the class-per-role model, the leader delegates to the scout and commander roles to carry out each portion of the protocol.
 
 ```python
-
 class Leader(Role):
 
     def __init__(self, node, peers, commander_cls=Commander, scout_cls=Scout):
@@ -623,7 +618,8 @@ class Leader(Role):
             self.scouting = False
         self.logger.info("leader preempted by %s", preempted_by.leader)
         self.active = False
-        self.ballot_num = Ballot((preempted_by or self.ballot_num).n + 1, self.ballot_num.leader)
+        self.ballot_num = Ballot((preempted_by or self.ballot_num).n + 1, 
+                                 self.ballot_num.leader)
 
     def do_Propose(self, sender, slot, proposal):
         if slot not in self.proposals:
@@ -639,17 +635,15 @@ class Leader(Role):
                     self.logger.info("got PROPOSE while scouting; ignored")
         else:
             self.logger.info("got PROPOSE for a slot already being proposed")
-    
 ```
 
 The leader creates a scout role when it wants to become active, in response to receiving a ``Propose`` when it is inactive (\aosafigref{500l.cluster.leaderscout}.)
 The scout sends (and re-sends, if necessary) a ``Prepare`` message, and collects ``Promise`` responses until it has heard from a majority of its peers or until it has been preempted.
-It communicates the result back to the leader with an ``Adopted`` or ``Preempted`` message, respectively.
+It communicates back to the leader with ``Adopted`` or ``Preempted``, respectively. \newpage
 
-\aosafigure{cluster-images/leaderscout.png}{Scout}{500l.cluster.leaderscout}
+\aosafigure[240pt]{cluster-images/leaderscout.png}{Scout}{500l.cluster.leaderscout}
 
 ```python
-
 class Scout(Role):
 
     def __init__(self, node, ballot_num, peers):
@@ -689,7 +683,8 @@ class Scout(Role):
                 # leader is active.  # Any such conflicts will be handled by the
                 # commanders.
                 self.node.send([self.node.address],
-                    Adopted(ballot_num=ballot_num, accepted_proposals=accepted_proposals))
+                    Adopted(ballot_num=ballot_num, 
+                            accepted_proposals=accepted_proposals))
                 self.stop()
         else:
             # this acceptor has promised another leader a higher ballot number,
@@ -697,18 +692,16 @@ class Scout(Role):
             self.node.send([self.node.address], 
                 Preempted(slot=None, preempted_by=ballot_num))
             self.stop()
-    
 ```
 
 The leader creates a commander role for each slot where it has an active proposal (\aosafigref{500l.cluster.leadercommander}.)
 Like a scout, a commander sends and re-sends ``Accept`` messages and waits for a majority of acceptors to reply with ``Accepted``, or for news of its preemption.
 When a proposal is accepted, the commander broadcasts a ``Decision`` message to all nodes.
-It responds to the leader with either ``Decided`` or ``Preempted``.
+It responds to the leader with ``Decided`` or ``Preempted``.
 
-\aosafigure{cluster-images/leadercommander.png}{Commander}{500l.cluster.leadercommander}
+\aosafigure[240pt]{cluster-images/leadercommander.png}{Commander}{500l.cluster.leadercommander}
 
 ```python
-
 class Commander(Role):
 
     def __init__(self, node, ballot_num, slot, proposal, peers):
@@ -746,9 +739,7 @@ class Commander(Role):
             self.finished(ballot_num, False)
         else:
             self.finished(ballot_num, True)
-    
 ```
-
 
 As an aside, a surprisingly subtle bug appeared here during development.
 At the time, the network simulator introduced packet loss even on messages within a node.
@@ -762,14 +753,13 @@ The solution was to ensure that local messages are always delivered, as is the c
 
 When a node joins the cluster, it must determine the current cluster state before it can participate.
 The bootstrap role handles this by sending ``Join`` messages to each peer in turn until it receives a ``Welcome``.
-Bootstrap's communication diagram is shown above in the "Replica" section.
+Bootstrap's communication diagram is shown above in \aosasecref{sec.cluster.replica}.
 
 An early version of the implementation started each node with a full set of roles (replica, leader, and acceptor), each of which began in a "startup" phase, waiting for information from the ``Welcome`` message.
 This spread the initialization logic around every role, requiring separate testing of each one.
 The final design has the bootstrap role adding each of the other roles to the node once startup is complete, passing the initial state to their constructors.
 
 ```python
-
 class Bootstrap(Role):
 
     def __init__(self, node, peers, execute_fn,
@@ -799,7 +789,6 @@ class Bootstrap(Role):
         self.leader_cls(self.node, peers=self.peers, commander_cls=self.commander_cls,
                         scout_cls=self.scout_cls).start()
         self.stop()
-    
 ```
 
 #### Seed
@@ -825,10 +814,10 @@ The seed role then stops itself and starts a bootstrap role to join the newly-se
 Seed emulates the ``Join``/``Welcome`` part of the bootstrap/replica interaction, so its communication diagram is the same as for the replica role.
 
 ```python
-
 class Seed(Role):
 
-    def __init__(self, node, initial_state, execute_fn, peers, bootstrap_cls=Bootstrap):
+    def __init__(self, node, initial_state, execute_fn, peers, 
+                 bootstrap_cls=Bootstrap):
         super(Seed, self).__init__(node)
         self.initial_state = initial_state
         self.execute_fn = execute_fn
@@ -854,10 +843,10 @@ class Seed(Role):
 
     def finish(self):
         # bootstrap this node into the cluster we just seeded
-        bs = self.bootstrap_cls(self.node, peers=self.peers, execute_fn=self.execute_fn)
+        bs = self.bootstrap_cls(self.node, 
+                                peers=self.peers, execute_fn=self.execute_fn)
         bs.start()
         self.stop()
-    
 ```
 
 #### Requester
@@ -867,7 +856,6 @@ The role class simply sends ``Invoke`` messages to the local replica until it re
 See the "Replica" section, above, for this role's communication diagram.
 
 ```python
-
 class Requester(Role):
 
     client_ids = itertools.count(start=100000)
@@ -892,7 +880,6 @@ class Requester(Role):
         self.invoke_timer.cancel()
         self.callback(output)
         self.stop()
-    
 ```
 
 ### Summary
@@ -926,8 +913,7 @@ We again use ``functools.partial`` to set up a future call to the destination no
 
 Running the simulation just involves popping timers from the heap and executing them if they have not been cancelled and if the destination node is still active.
 
-```python
-
+```python 
 class Timer(object):
 
     def __init__(self, expires, address, callback):
@@ -941,10 +927,7 @@ class Timer(object):
 
     def cancel(self):
         self.cancelled = True
-    
-```
 
-```python
 
 class Network(object):
     PROP_DELAY = 0.03
@@ -983,7 +966,9 @@ class Network(object):
 
     def send(self, sender, destinations, message):
         sender.logger.debug("sending %s to %s", message, destinations)
-        for dest in (d for d in destinations if d in self.nodes):
+        # avoid aliasing by making a closure containing distinct deep copy of
+        # message for each dest
+        def sendto(dest, message):
             if dest == sender.address:
                 # reliably deliver local messages with no delay
                 self.set_timer(sender.address, 0,  
@@ -994,7 +979,8 @@ class Network(object):
                 self.set_timer(dest, delay, 
                                functools.partial(self.nodes[dest].receive, 
                                                  sender.address, message))
-    
+        for dest in (d for d in destinations if d in self.nodes):
+            sendto(dest, copy.deepcopy(message))
 ```
 
 While it's not included in this implementation, the component model allows us to swap in a real-world network implementation, communicating between actual servers on a real network, with no changes to the other components.
@@ -1011,11 +997,10 @@ The most important debugging feature in Cluster is a *deterministic* simulator.
 Unlike a real network, it will behave exactly the same way on every run, given the same seed for the random number generator.
 This means that we can add additional debugging checks or output to the code and re-run the simulation to see the same failure in more detail.
 
-Of course, much of that detail is in the messages sent and received by the different nodes in the cluster, so those are automatically logged in their entirety.
+Of course, much of that detail is in the messages exchanged by the nodes in the cluster, so those are automatically logged in their entirety.
 That logging includes the role class sending or receiving the message, as well as the simulated timestamp injected via the ``SimTimeLogger`` class.
 
 ```python
-
 class SimTimeLogger(logging.LoggerAdapter):
 
     def process(self, msg, kwargs):
@@ -1024,7 +1009,6 @@ class SimTimeLogger(logging.LoggerAdapter):
     def getChild(self, name):
         return self.__class__(self.logger.getChild(name),
                               {'network': self.extra['network']})
-    
 ```
 
 A resilient protocol such as this one can often run for a long time after a bug has been triggered.
@@ -1033,16 +1017,14 @@ This meant that once a decision was handled on one node, all other nodes saw it 
 Even with this serious bug, the cluster produced correct results for several transactions before deadlocking.
 
 Assertions are an important tool to catch this sort of error early.
-Assertions should include any invariants from the algorithm design, but when the code doesn't behave as we expect, asserting our expectations is a great way to see where things go astray.
+Assertions should include any invariants from the algorithm design, but when the code doesn't behave as we expect, asserting our expectations is a great way to see where things go astray. 
 
 ```python
-
     assert not self.decisions.get(self.slot, None), \
             "next slot to commit is already decided"
     if slot in self.decisions:
         assert self.decisions[slot] == proposal, \
             "slot %d already decided with %r!" % (slot, self.decisions[slot])
-    
 ```
 
 Identifying the right assumptions we make while reading code is a part of the art of debugging.
@@ -1068,17 +1050,15 @@ For the most part, then, roles can be tested by sending messages to them and obs
 
 #### Unit Testing
 
-The unit tests for Cluster (all of which are availble in the book's Github repository) are simple and short:
+The unit tests for Cluster are simple and short:
 
 ```python
-
 class Tests(utils.ComponentTestCase):
     def test_propose_active(self):
         """A PROPOSE received while active spawns a commander."""
         self.activate_leader()
         self.node.fake_message(Propose(slot=10, proposal=PROPOSAL1))
         self.assertCommanderStarted(Ballot(0, 'F999'), 10, PROPOSAL1)
-    
 ```
 
 This method tests a single behavior (commander spawning) of a single unit (the ``Leader`` class).
@@ -1091,7 +1071,6 @@ Each role class which adds other roles to the network takes a list of class obje
 For example, the constructor for ``Leader`` looks like this:
 
 ```python
-
 class Leader(Role):
     def __init__(self, node, peers, commander_cls=Commander, scout_cls=Scout):
         super(Leader, self).__init__(node)
@@ -1102,19 +1081,16 @@ class Leader(Role):
         self.scout_cls = scout_cls
         self.scouting = False
         self.peers = peers
-    
 ```
 
 The ``spawn_scout`` method (and similarly, ``spawn_commander``) creates the new role object with ``self.scout_cls``:
 
 ```python
-
 class Leader(Role):
     def spawn_scout(self):
         assert not self.scouting
         self.scouting = True
         self.scout_cls(self.node, self.ballot_num, self.peers).start()
-
 ```
 
 The magic of this technique is that, in testing, ``Leader`` can be given fake classes and thus tested separately from ``Scout`` and ``Commander``.
@@ -1127,7 +1103,7 @@ Neither test checks that those formats match.
 
 One approach to fixing this issue is to make the interfaces self-enforcing.
 In Cluster, the use of named tuples and keyword arguments avoids any disagreement over messages' attributes.
-Because the only interaction between role classes is via messages, this covers a substantial proportion of the interface.
+Because the only interaction between role classes is via messages, this covers a large part of the interface.
 
 For specific issues such as the format of ``accepted_proposals``, both the real and test data can be verified using the same function, in this case ``verifyPromiseAccepted``.
 The tests for the acceptor use this method to verify each returned ``Promise``, and the tests for the scout use it to verify every fake ``Promise``.
@@ -1231,7 +1207,7 @@ Lamport addresses this challenge in the final paragraph of "Paxos Made Simple":
 
 > We can allow a leader to get $\alpha$ commands ahead by letting the set of servers that execute instance $i+\alpha$ of the consensus algorithm be specified by the state after execution of the $i$th state machine command.  (Lamport, 2001)
 
-The idea is that each instance of Paxos (slot) uses the view from α slots earlier.
+The idea is that each instance of Paxos (slot) uses the view from $\alpha$ slots earlier.
 This allows the cluster to work on, at most, $\alpha$ slots at any one time, so a very small value of $\alpha$ limits concurrency, while a very large value of $\alpha$ makes view changes slow to take effect.
 
 In early drafts of this implementation (dutifully preserved in the git history!), I implemented support for view changes (using $\alpha$ in place of 3).
@@ -1243,14 +1219,13 @@ This seemingly simple change introduced a great deal of complexity:
 * properly serializing multiple competing view changes, and
 * communicating view information between the leader and replica.
 
-The result was far too large for this book!
+The result was far too large for this book! \newpage
 
 ## References
 
-In addition to the original Paxos paper and Lamport's follow-up "Paxos Made Simple"[^simple], our implementation added extensions that were informed by several other resources. The role names were taken from "Paxos Made Moderately Complex"[^complex]. "Paxos Made Live"[^live] was helpful regarding snapshots in particular, and "Paxos Made Practical"[^practical] described view changes (although not of the type described here.) Liskov's "From Viewstamped Replication to Byzantine Fault Tolerance"[^tolerance] provided yet another perspective on view changes. Finally, a [Stack Overflow discussion](http://stackoverflow.com/questions/21353312/in-part-time-parliament-why-does-using-the-membership-from-decree-n-3-work-to) was helpful in learning how members are added and removed from the system.
+In addition to the original Paxos paper and Lamport's follow-up "Paxos Made Simple"[^simple], our implementation added extensions that were informed by several other resources. The role names were taken from "Paxos Made Moderately Complex"[^complex]. "Paxos Made Live"[^live] was helpful regarding snapshots in particular, and ["Paxos Made Practical"](http://www.scs.stanford.edu/~dm/home/papers/paxos.pdf) described view changes (although not of the type described here.) Liskov's "From Viewstamped Replication to Byzantine Fault Tolerance"[^tolerance] provided yet another perspective on view changes. Finally, a [Stack Overflow discussion](http://stackoverflow.com/questions/21353312/in-part-time-parliament-why-does-using-the-membership-from-decree-n-3-work-to) was helpful in learning how members are added and removed from the system.
 
 [^simple]: L. Lamport, "Paxos Made Simple," ACM SIGACT News (Distributed Computing Column) 32, 4 (Whole Number 121, December 2001) 51-58.
-[^complex]: R. Van Renesse and D. Altinbuken, "Paxos Made Moderately Complex," ACM Computing Survey 47, 3, Article 42 (February 2015)
+[^complex]: R. Van Renesse and D. Altinbuken, "Paxos Made Moderately Complex," ACM Comp. Survey 47, 3, Article 42 (Feb. 2015)
 [^live]: T. Chandra, R. Griesemer, and J. Redstone, "Paxos Made Live - An Engineering Perspective," Proceedings of the twenty-sixth annual ACM symposium on Principles of distributed computing (PODC '07). ACM, New York, NY, USA, 398-407. 
-[^practical]: http://www.scs.stanford.edu/~dm/home/papers/paxos.pdf
 [^tolerance]: B. Liskov, "From Viewstamped Replication to Byzantine Fault Tolerance," In *Replication*, Springer-Verlag, Berlin, Heidelberg 121-149 (2010)

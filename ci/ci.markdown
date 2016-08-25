@@ -1,9 +1,8 @@
 title: A Continuous Integration System
 author: Malini Das
-
+<markdown>
 _Malini Das is a software engineer who is passionate about developing quickly (but safely!), and solving cross-functional problems. She has worked at Mozilla as a tools engineer and is currently honing her skills at Twitch. Follow Malini on [Twitter](https://twitter.com/malinidas) or on her [blog](http://malinidas.com/)._
-
-
+</markdown>
 ## What is a Continuous Integration System?
 
 When developing software, we want to be able to verify that our new
@@ -24,20 +23,18 @@ should also be failure resistant. This means if any part of the system
 fails, it should be able to recover and continue from that point.
 
 This test system should also handle load well, so that we can get test
-results in a reasonable amount of time in the event that commits are
-being made faster than the tests can be run. We can achieve this by
-distributing and parallelizing the testing effort. This project will
-demonstrate a small-scale, distributed continuous integration system. It
-is a bare-bones system, but is designed for extensibility.
+results in a reasonable amount of time in the event that commits are being made
+faster than the tests can be run. We can achieve this by distributing and
+parallelizing the testing effort. This project will demonstrate a small,
+bare-bones distributed continuous integration system that is designed for
+extensibility.
 
 ## Project Limitations and Notes
 
-This project uses Git as the repository for the code that needs to be
-tested. Only standard source code management calls will be used, so if
-you are unfamiliar with Git but are familiar with other version control
-systems (VCS) like svn or Mercurial, you can still follow along.
-
-This project also assumes you are using a POSIX system.
+This project uses Git as the repository for the code that needs to be tested.
+Only standard source code management calls will be used, so if you are
+unfamiliar with Git but are familiar with other version control systems (VCS)
+like svn or Mercurial, you can still follow along. 
 
 Due to the limitations of code length and unittest, I simplified test
 discovery. We will *only* run tests that are in a directory named
@@ -120,21 +117,18 @@ systems are run in a distributed environment like this so they can have
 failover redundancy (i.e., we can fall back to a standby machine if one
 of the machines a process was running on becomes defunct).
 
-For the purposes of this project, each of these processes will run
-locally, and you must kick them off individually. Since the processes
-need to communicate with each other, they will run on distinct local
-ports.
+For the purposes of this project, each of these processes will be locally and
+manually started distinct local ports.
 
 ### Files in this Project
 
-This project contains Python files for each of these components: the
-repository observer (`repo_observer.py`), the test job dispatcher
-(`dispatcher.py`), and the test runner (`test_runner.py`). Each of these
-three processes communicate with each other using sockets, and since the
+This project contains Python files for each of these components: the repository
+observer \newline (`repo_observer.py`), the test job dispatcher
+(`dispatcher.py`), and the test runner \newline (`test_runner.py`). Each of
+these three processes communicate with each other using sockets, and since the
 code used to transmit information is shared by all of them, there is a
-helpers.py file that contains it, so each process imports the
-communicate function from here instead of having it duplicated in the
-file.
+helpers.py file that contains it, so each process imports the communicate
+function from here instead of having it duplicated in the file.
 
 There are also bash script files used by these processes. These script
 files are used to execute bash and git commands in an easier way than
@@ -256,13 +250,15 @@ Once the repository observer file is invoked, it starts the `poll()`
 function. This function parses the command line arguments, and then
 kicks off an infinite while loop. The while loop is used to periodically
 check the repository for changes. The first thing it does is call the
-`update_repo.sh` Bash script. (Bash is used because we need to check file
+`update_repo.sh` Bash script [^bash].
+
+[^bash]: Bash is used because we need to check file
 existence, create files, and use Git, and a shell script is the most
 direct and easy way to achieve this. Alternatively, there are
 cross-platform Python packages you can use; for example, Python's `os`
 built-in module can be used for accessing the file system, and GitPython
 can be used for Git access, but they perform actions in a more
-roundabout way.)
+roundabout way.
 
 ```python
     while True:
@@ -272,7 +268,8 @@ roundabout way.)
             # with the latest commit in the current working directory
             subprocess.check_output(["./update_repo.sh", args.repo])
         except subprocess.CalledProcessError as e:
-            raise Exception("Could not update and check repository. Reason: %s" % e.output)
+            raise Exception("Could not update and check repository. " +
+                            "Reason: %s" % e.output)
 ```
 
 The `update_repo.sh` file is used to identify any new commits and let the
@@ -394,7 +391,7 @@ seconds if anything went wrong along the way.
 ```
 
 The repository observer will repeat this process forever, until you kill
-the process via a `KeyboardInterrupt` (Ctrl+c), or by sending it a kill
+the process via a \newline `KeyboardInterrupt` (Ctrl+c), or by sending it a kill
 signal.
 
 ### The Dispatcher (`dispatcher.py`)
@@ -502,8 +499,8 @@ runtest message to it with the commit ID. If none are currently
 available, it will wait two seconds and repeat this process. Once
 dispatched, it logs which commit ID is being tested by which test runner
 in the `dispatched_commits` variable. If the commit ID is in the
-`pending_commits` variable, `dispatch_tests` will remove it since it was
-successfully re-dispatched.
+`pending_commits` variable, `dispatch_tests` will remove it since it has
+already been successfully re-dispatched.
 
 ```python
 def dispatch_tests(server, commit_id):
@@ -540,7 +537,7 @@ for our case, since the dispatcher server must be able to directly and
 swiftly communicate with all test runners and the repository observer.
 
 In order for the dispatcher server to handle simultaneous connections,
-it uses the `ThreadingTCPServer` custom class, which adds threading
+it uses the \newline `ThreadingTCPServer` custom class, which adds threading
 ability to the default `SocketServer`. This means that any time the
 dispatcher receives a connection request, it spins off a new process
 just for that connection. This allows the dispatcher to handle multiple
@@ -582,7 +579,6 @@ class DispatcherHandler(SocketServer.BaseRequestHandler):
 ```
 
 It handles four commands: `status`, `register`, `dispatch`, and `results`.
-
 `status` is used to check if the dispatcher server is up and running.
 
 ```python
@@ -804,32 +800,28 @@ run_or_fail "Could not update to given commit hash" git reset --hard "$COMMIT"
 ```
 
 In order to run `test_runner.py`, you must point it to a clone of the
-repository to run tests against. In this case, you can use the
-previously created `/path/to/test_repo test_repo_clone_runner` clone
-as the argument. By default, `test_runner.py` will start its own server
-on localhost using a port in the range 8900-9000, and will try to
-connect to the dispatcher server at `localhost:8888`. You may pass it
-optional arguments to change these values. The `--host` and `--port`
-arguments are used to designate a specific address to run the test
-runner server on, and the `--dispatcher-server` argument will have it
-connect to a different address than `localhost:8888` to communicate with
-the dispatcher.
+repository to run tests against. In this case, you can use the previously
+created `/path/to/test_repo test_repo_clone_runner` clone as the argument. By
+default, `test_runner.py` will start its own server on localhost using a port
+in the range 8900-9000, and will try to connect to the dispatcher server at
+`localhost:8888`. You may pass it optional arguments to change these values.
+The `--host` and `--port` arguments are used to designate a specific address to
+run the test runner server on, and the `--dispatcher-server` argument specifies
+the address of the dispatcher.
 
 ### Control Flow Diagram
 
-\aosafigref{500l.ci.controlflow} is overview diagram of this system. This
-diagram assumes that all three files (`repo_observer.py`, `dispatcher.py` and
-`test_runner.py`) are already running, and describes the actions each process
-takes when a new commit is made.
+\aosafigref{500l.ci.controlflow} is an overview diagram of this system. This
+diagram assumes that all three files \newline (`repo_observer.py`,
+`dispatcher.py` and `test_runner.py`) are already running, and describes the
+actions each process takes when a new commit is made.
 
 \aosafigure[360pt]{ci-images/diagram.png}{Control Flow}{500l.ci.controlflow}
 
 ### Running the Code
 
-We can run this simple CI system locally, using three different terminal
-shells for each process.
-
-We start the dispatcher first, running on port 8888:
+We can run this simple CI system locally, using three different terminal shells
+for each process. We start the dispatcher first, running on port 8888:
 
 ```bash
 $ python dispatcher.py
@@ -848,7 +840,7 @@ You may run as many test runners as you like.
 Lastly, in another new shell, let's start the repo observer:
 
 ```bash
-$ python repo_observer.py --dispatcher-server=localhost:8888 <path/to/test_repo_clone_obs>
+$ python repo_observer.py --dispatcher-server=localhost:8888 <path/to/repo_clone_obs>
 ```
 
 Now that everything is set up, let's trigger some tests! To do that,
@@ -901,8 +893,7 @@ be far more functional. Here are a few suggestions for improvements:
 The current system will periodically check to see if new commits are run
 and will run the most recent commit. This should be improved to test
 each commit. To do this, you can modify the periodic checker to dispatch
-test runs for each commit in the log between the last tested commit and
-the latest commit.
+test runs for each commit in the log between the last-tested and the latest commit.
 
 ### Smarter Test Runners
 

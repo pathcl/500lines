@@ -1,6 +1,5 @@
 title: A Template Engine
 author: Ned Batchelder
-
 <markdown>
 _Ned Batchelder is a software engineer with a long career, currently working at
 edX to build open source software to educate the world.  He's the maintainer of
@@ -8,7 +7,6 @@ coverage.py, an organizer of Boston Python, and has spoken at many PyCons.  He
 blogs at [http://nedbatchelder.com](http://nedbatchelder.com). He once had
 dinner at the White House._
 </markdown>
-
 ## Introduction
 
 Most programs contain a lot of logic, and a little bit of literal textual data.
@@ -49,7 +47,7 @@ Here, the user's name will be dynamic, as will the names and prices of
 the products.  Even the number of products isn't fixed: at another moment, there
 could be more or fewer products to display.
 
-One simple way to make this HTML would be to have string constants in our code,
+One way to make this HTML would be to have string constants in our code,
 and join them together to produce the page.  Dynamic data would be inserted
 with string substitution of some sort.  Some of our dynamic data is repetitive,
 like our lists of products.  This means we'll have chunks of HTML that repeat,
@@ -74,7 +72,8 @@ PRODUCT_HTML = "<li>{prodname}: {price}</li>\n"
 def make_page(username, products):
     product_html = ""
     for prodname, price in products:
-        product_html += PRODUCT_HTML.format(prodname=prodname, price=format_price(price))
+        product_html += PRODUCT_HTML.format(
+            prodname=prodname, price=format_price(price))
     html = PAGE_HTML.format(name=username, products=product_html)
     return html
 ```
@@ -138,12 +137,12 @@ literal text, with special notation to indicate the executable dynamic parts.
 ```
 
 Here the text is meant to appear literally in the resulting HTML page, until the
-'`{{`' notation indicates a switch into dynamic mode, where the `user_name` variable
+'`{{`' indicates a switch into dynamic mode, where the `user_name` variable
 will be substituted into the output.
 
 String formatting functions such as Python's `"foo = {foo}!".format(foo=17)`
 are examples of mini-languages used to create text from a string literal and the data
-to be inserted.  Templates extend this idea to include logic constructs like
+to be inserted.  Templates extend this idea to include constructs like
 conditionals and loops, but the difference is only of degree.
 
 These files are called templates because they are used to produce many
@@ -202,30 +201,25 @@ obj.method
 The dot will access object attributes or dictionary values, and
 if the resulting value is callable, it's automatically called.  This is
 different than the Python code, where you need to use different syntax for
-those operations.  This results in simpler template syntax:
+those operations. This results in simpler template syntax:
 
 ```html
 <p>The price is: {{product.price}}, with a {{product.discount}}% discount.</p>
 ```
 
-Dots can be used multiple times on a single value to navigate down an attribute
-or element chain.
-
-You can use helper functions, called filters, to modify values.  Filters
+You can use functions called _filters_ to modify values.  Filters
 are invoked with a pipe character:
 
 ```html
 <p>Short name: {{story.subject|slugify|lower}}</p>
 ```
 
-Building interesting pages usually requires at least a small amount of logic,
+Building interesting pages usually requires at least a small amount of decision-making,
 so conditionals are available:
 
 ```html
 {% if user.is_logged_in %}
     <p>Welcome, {{ user.name }}!</p>
-{% else %}
-    <p><a href="/login">Log in </a></p>
 {% endif %}
 ```
 
@@ -253,13 +247,13 @@ brace-hashes:
 
 ## Implementation Approaches
 
-In broad strokes, the template engine will have two main phases:
+In broad strokes, the template engine will have two main phases: _parsing_ the template, and then _rendering_ the template.
 
-* Parse the template
-* Render the template to assemble the text result, which involves:
-    * Managing the dynamic context, the source of the data
-    * Executing the logic elements
-    * Implementing dot access and filter execution
+Rendering the template specifically involves:
+
+* Managing the dynamic context, the source of the data
+* Executing the logic elements
+* Implementing dot access and filter execution
 
 The question of what to pass from the parsing
 phase to the rendering phase is key.  What does parsing produce that can be rendered?
@@ -468,7 +462,7 @@ compiled results.
 The constructor also accepts a dictionary of values, an initial context. These
 are stored in the Templite object, and will be available when the template is
 later rendered.  These are good for defining functions or constants we want to
-be available everywhere, like our `upper` function in the previous example.
+be available everywhere, like `upper` in the previous example.
 
 Before we discuss the implementation of Templite, we have a helper to define
 first: CodeBuilder.
@@ -506,10 +500,9 @@ class CodeBuilder(object):
 ```
 <!-- [[[end]]] -->
 
-CodeBuilder doesn't do much. Let's take a method-by-method look at the interface and implementation.
-
-`add_line` adds a new line of code, which automatically indents the text to
-  the current indentation level, and supplies a newline:
+CodeBuilder doesn't do much. `add_line` adds a new line of code, which
+automatically indents the text to the current indentation level, and supplies a
+newline:
 
 <!-- [[[cog include("templite.py", first="def add_line", numblanks=3, dedent=False) ]]] -->
 ```python
@@ -616,20 +609,19 @@ template engine only needs to define one function.  But it's better software
 design to keep that implementation detail in the template engine code, and out
 of our CodeBuilder class.
 
-Even as we're actually using it --- to define a single function --- having `get_globals`
+Even as we're actually using it&mdash;to define a single function&mdash;having `get_globals`
 return the dictionary keeps the code more modular because it doesn't need to
 know the name of the function we've defined.  Whatever function name we define
 in our Python source, we can retrieve that name from the dict returned by
 `get_globals`.
 
 Now we can get into the implementation of the Templite class itself, and see
-how CodeBuilder is used.
+how and where CodeBuilder is used.
 
 
 ### The Templite class implementation
 
-Most of our code is in the Templite class.  As we've discussed, it has two
-phases: compilation and rendering.
+Most of our code is in the Templite class.  As we've discussed, it has both a compilation and a rendering phase.
 
 
 #### Compiling
@@ -682,7 +674,7 @@ template, the loop variables:
 ```
 <!-- [[[end]]] -->
 
-Later we'll see how these get used to help contruct the prologue of our
+Later we'll see how these get used to help construct the prologue of our
 function. First, we'll use the CodeBuilder class we wrote earlier to start to
 build our compiled function:
 
@@ -712,7 +704,7 @@ set of data available to the template that we made in the Templite constructor.
 Notice that CodeBuilder is very simple: it doesn't "know" about function
 definitions, just lines of code.  This keeps CodeBuilder simple, both in its
 implementation, and in its use.  We can read our generated code here without
-having to mentally interpolate too many specialized CodeBuilder methods.
+having to mentally interpolate too many specialized CodeBuilder.
 
 We create a section called `vars_code`.  Later we'll write the variable
 extraction lines into that section.  The `vars_code` object lets us save a
@@ -776,13 +768,13 @@ this:
 buffered.append("'hello'")
 ```
 
-which will mean that our compiled Python function will have this line:
+\noindent which will mean that our compiled Python function will have this line:
 
 ```python
 append_result('hello')
 ```
 
-which will add the string `hello` to the rendered output of the template. We have multiple levels of abstraction here which can be difficult to keep straight. The compiler uses `buffered.append("'hello'")`, which creates `append_result('hello')` in the compiled Python function, which when run, appends `hello` to the template result.
+\noindent which will add the string `hello` to the rendered output of the template. We have multiple levels of abstraction here which can be difficult to keep straight. The compiler uses \newline `buffered.append("'hello'")`, which creates `append_result('hello')` in the compiled Python function, which when run, appends `hello` to the template result.
 
 Back to our Templite class. As we parse control structures, we want to check
 that they are properly nested.  The `ops_stack` list is a stack of strings:
@@ -1027,11 +1019,10 @@ append_result('"Don\'t you like my hat?" he asked.')
 ```
 
 Notice that we first check if the token is an empty string with `if token:`,
-since there's no point adding an empty string to the output.  Empty tokens
-happen if two template tags are adjacent.  Because our regex is splitting on
-tag syntax, adjacent tags will have an empty string between them.  The check
-here is an easy way to avoid putting useless `append_result("")` statements
-into our compiled function.
+since there's no point adding an empty string to the output. Because our regex
+is splitting on tag syntax, adjacent tags will have an empty token between
+them.  The check here is an easy way to avoid putting useless
+`append_result("")` statements into our compiled function.
 
 That completes the loop over all the tokens in the template.  When the loop is
 done, all of the template has been processed.  We have one last check to make:
@@ -1052,8 +1043,7 @@ unpack template variables from the context into Python locals.  Now that we've
 processed the entire template, we know the names of all the variables, so we
 can write the lines in this prologue.
 
-We have to do a little work to know what names we need to define.  If we look
-again at our sample template:
+We have to do a little work to know what names we need to define.  Looking at our sample template:
 
 ```html
 <p>Welcome, {{user_name}}!</p>
@@ -1128,7 +1118,7 @@ expression.  Our template expressions can be as simple as a single name:
 {{user_name}}
 ```
 
-or can be a complex sequence of attribute accesses and filters:
+\noindent or can be a complex sequence of attribute accesses and filters:
 
 ```
 {{user.name.localized|upper|escape}}
@@ -1149,7 +1139,7 @@ recursive form:
 
 The first case to consider is that our expression has pipes in it.  If it does,
 then we split it into a list of pipe-pieces.  The first pipe-piece is passed
-recursively to `_expr_code` to turn it into a Python expression.
+recursively to `_expr_code` to convert it into a Python expression.
 
 <!-- [[[cog include("templite.py", first="if ", after="def _expr_code", numlines=6, dedent=False) ]]] -->
 ```python
@@ -1275,14 +1265,14 @@ at render time.
 
 Notice that the data passed to `render` could overwrite data passed to the
 Templite constructor.  That tends not to happen, because the context passed to
-the constructor has global-ish kinds of things like filter definitions and
+the constructor has global-ish things like filter definitions and
 constants, and the context passed to `render` has specific data for that one
 rendering.
 
 Then we simply call our compiled `render_function`.  The first argument is the
 complete data context, and the second argument is the function that will implement
 the dot semantics.  We use the same implementation every time: our own
-`_do_dots` method, which is the last piece of code to look at.
+`_do_dots` method.
 
 <!-- [[[cog include("templite.py", first="def _do_dots", numblanks=1, dedent=False) ]]] -->
 ```python
@@ -1337,7 +1327,7 @@ here.  To keep this code small, we're leaving out interesting ideas like:
 * Custom tags
 * Automatic escaping
 * Arguments to filters
-* Complex logic like elif and for/else
+* Complex conditional logic like else and elif
 * Loops with more than one loop variable
 * Whitespace control
 
